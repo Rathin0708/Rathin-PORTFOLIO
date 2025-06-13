@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "531670640472",
+    "project_id": "mine-fca38",
+    "storage_bucket": "mine-fca38.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:531670640472:android:3f81d8110f30d511ffe72d",
+        "android_client_info": {
+          "package_name": "com.example.my_port"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCG3_vDvddiW3nNPZ2f-3tVrhylIOB1TZs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
