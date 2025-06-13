@@ -2,22 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/foundation.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'providers/theme_provider.dart';
-import 'screens/portfolio_screen.dart';
+import 'providers/auth_provider.dart';
+import 'screens/auth/auth_wrapper.dart';
 import 'utils/app_theme.dart';
-
-// Conditional Firebase imports
-import 'firebase_options.dart' if (dart.library.html) 'firebase_options.dart';
-import 'package:firebase_core/firebase_core.dart' if (dart.library.html) 'package:firebase_core/firebase_core.dart';
+import 'utils/admin_setup.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Only initialize Firebase on web platform
-  if (kIsWeb) {
+  // Initialize Firebase on all platforms
+  try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    print('✅ Firebase initialized successfully');
+
+    // Initialize admin setup
+    AdminSetup.initialize();
+  } catch (e) {
+    print('❌ Firebase initialization failed: $e');
   }
 
   runApp(const MyApp());
@@ -33,8 +39,11 @@ class MyApp extends StatelessWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
-        return ChangeNotifierProvider(
-          create: (context) => ThemeProvider(),
+        return MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (context) => ThemeProvider()),
+            ChangeNotifierProvider(create: (context) => AuthProvider()),
+          ],
           child: Consumer<ThemeProvider>(
             builder: (context, themeProvider, child) {
               return MaterialApp(
@@ -43,7 +52,7 @@ class MyApp extends StatelessWidget {
                 theme: AppTheme.lightTheme,
                 darkTheme: AppTheme.darkTheme,
                 themeMode: themeProvider.themeMode,
-                home: const PortfolioScreen(),
+                home: const SplashScreen(),
               );
             },
           ),

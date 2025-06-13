@@ -133,16 +133,9 @@ class HeroSection extends StatelessWidget {
               end: Alignment.bottomRight,
             ),
           ),
-          child: const Icon(
-            Icons.person,
-            size: 150,
-            color: Colors.white,
+          child: ClipOval(
+            child: _buildActualProfileImage(),
           ),
-          // Replace with your actual profile image:
-          // Image.asset(
-          //   'assets/images/profile.jpg',
-          //   fit: BoxFit.cover,
-          // ),
         ),
       ),
     );
@@ -300,6 +293,44 @@ class HeroSection extends StatelessWidget {
           fontWeight: FontWeight.w600,
         ),
       ),
+    );
+  }
+
+  Widget _buildActualProfileImage() {
+    return Image.asset(
+      'assets/images/profile.jpg',
+      fit: BoxFit.cover,
+      width: double.infinity,
+      height: double.infinity,
+      errorBuilder: (context, error, stackTrace) {
+        // Fallback to a beautiful gradient with initials if image not found
+        return Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFF667eea),
+                Color(0xFF764ba2),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Center(
+            child: Text(
+              AppConstants.name.isNotEmpty
+                  ? AppConstants.name.substring(0, 1).toUpperCase()
+                  : 'R',
+              style: const TextStyle(
+                fontSize: 60,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 

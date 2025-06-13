@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -385,12 +386,20 @@ class _ContactSectionState extends State<ContactSection> {
       setState(() => _isSubmitting = true);
       
       final formData = _formKey.currentState!.value;
+
+      // Collect additional device/platform information
+      final deviceInfo = await _getDeviceInfo();
+
       final contact = ContactModel(
         name: formData['name'],
         email: formData['email'],
         subject: formData['subject'],
         message: formData['message'],
         timestamp: DateTime.now(),
+        platform: kIsWeb ? 'Web' : 'Mobile',
+        userAgent: kIsWeb ? _getUserAgent() : 'Flutter Mobile App',
+        ipAddress: 'Client IP', // Could be enhanced with actual IP detection
+        deviceInfo: deviceInfo,
       );
 
       final success = await ContactService.submitContactForm(contact);
@@ -399,9 +408,9 @@ class _ContactSectionState extends State<ContactSection> {
       
       if (success) {
         _formKey.currentState?.reset();
-        _showSnackBar('Message sent successfully!', isError: false);
+        _showSnackBar('✅ Message sent! Email opened for rathin007008@gmail.com', isError: false);
       } else {
-        _showSnackBar('Failed to send message. Please try again.', isError: true);
+        _showSnackBar('❌ Failed to send message. Please try again.', isError: true);
       }
     }
   }
@@ -435,5 +444,27 @@ class _ContactSectionState extends State<ContactSection> {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
+  }
+
+  Future<Map<String, dynamic>> _getDeviceInfo() async {
+    final mediaQuery = MediaQuery.of(context);
+    return {
+      'screenWidth': mediaQuery.size.width,
+      'screenHeight': mediaQuery.size.height,
+      'devicePixelRatio': mediaQuery.devicePixelRatio,
+      'platform': kIsWeb ? 'Web Browser' : 'Mobile Device',
+      'orientation': mediaQuery.orientation.toString(),
+      'brightness': mediaQuery.platformBrightness.toString(),
+      'textScaleFactor': mediaQuery.textScaleFactor,
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+  }
+
+  String _getUserAgent() {
+    if (kIsWeb) {
+      // In web, you could use dart:html to get actual user agent
+      return 'Web Browser (Flutter Web)';
+    }
+    return 'Flutter Mobile App';
   }
 }

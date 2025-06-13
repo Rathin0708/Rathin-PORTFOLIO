@@ -34,6 +34,19 @@ class AppTheme {
     end: Alignment.bottomRight,
   );
 
+  // Text Styles
+  static TextStyle headingStyle = GoogleFonts.poppins(
+    fontSize: 28,
+    fontWeight: FontWeight.bold,
+    color: textPrimary,
+  );
+
+  static TextStyle bodyStyle = GoogleFonts.inter(
+    fontSize: 16,
+    fontWeight: FontWeight.normal,
+    color: textSecondary,
+  );
+
   // Light Theme
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,

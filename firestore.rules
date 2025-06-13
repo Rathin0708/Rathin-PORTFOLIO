@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Admin email constant
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'rathin007008@gmail.com';
+    }
+
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Check if user owns the document
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // Users collection - Admin can read all, users can read/write their own
+    match /users/{userId} {
+      allow read, write: if isAdmin();
+      allow read, write: if isAuthenticated() && isOwner(userId);
+      allow create: if isAuthenticated();
+    }
+
+    // Skills collection - Admin can manage, others can read
+    match /skills/{skillId} {
+      allow read: if true; // Public read access for portfolio display
+      allow write, delete: if isAdmin();
+    }
+
+    // Certificates collection - Admin can manage, others can read
+    match /certificates/{certificateId} {
+      allow read: if true; // Public read access for portfolio display
+      allow write, delete: if isAdmin();
+    }
+
+    // Contacts collection - Anyone can create, admin can read all
+    match /contacts/{contactId} {
+      allow create: if true; // Anyone can submit contact forms
+      allow read, write, delete: if isAdmin();
+    }
+
+    // App settings - Admin only
+    match /settings/{settingId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Admin logs - Admin only
+    match /admin_logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Default allow for authenticated users (fallback)
+    match /{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+  }
+}

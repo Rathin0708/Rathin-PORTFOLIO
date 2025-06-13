@@ -4,6 +4,10 @@ class ContactModel {
   final String subject;
   final String message;
   final DateTime timestamp;
+  final String? platform;
+  final String? userAgent;
+  final String? ipAddress;
+  final Map<String, dynamic>? deviceInfo;
 
   ContactModel({
     required this.name,
@@ -11,7 +15,14 @@ class ContactModel {
     required this.subject,
     required this.message,
     required this.timestamp,
+    this.platform,
+    this.userAgent,
+    this.ipAddress,
+    this.deviceInfo,
   });
+
+  // Getter for messageId
+  String get messageId => timestamp.millisecondsSinceEpoch.toString();
 
   factory ContactModel.fromJson(Map<String, dynamic> json) {
     return ContactModel(
@@ -20,6 +31,10 @@ class ContactModel {
       subject: json['subject'] ?? '',
       message: json['message'] ?? '',
       timestamp: DateTime.parse(json['timestamp'] ?? DateTime.now().toIso8601String()),
+      platform: json['platform'],
+      userAgent: json['userAgent'],
+      ipAddress: json['ipAddress'],
+      deviceInfo: json['deviceInfo'],
     );
   }
 
@@ -30,6 +45,13 @@ class ContactModel {
       'subject': subject,
       'message': message,
       'timestamp': timestamp.toIso8601String(),
+      'platform': platform ?? 'Unknown',
+      'userAgent': userAgent ?? 'Unknown',
+      'ipAddress': ipAddress ?? 'Unknown',
+      'deviceInfo': deviceInfo ?? {},
+      'messageId': timestamp.millisecondsSinceEpoch.toString(),
+      'formattedTime': timestamp.toString(),
+      'utcTime': timestamp.toUtc().toIso8601String(),
     };
   }
 }
