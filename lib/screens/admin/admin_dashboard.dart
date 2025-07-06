@@ -10,6 +10,9 @@ import 'skills_management_screen.dart';
 import 'certificates_management_screen.dart';
 import 'contacts_management_screen.dart';
 import 'app_settings_screen.dart';
+import 'profile_management_screen.dart';
+import 'about_management_screen.dart';
+import 'projects_management_screen.dart';
 import '../portfolio_screen.dart';
 
 class AdminDashboard extends StatefulWidget {
@@ -547,10 +550,12 @@ class _AdminDashboardState extends State<AdminDashboard>
         GridView.count(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
+          crossAxisCount: 3,
+          // Changed from 2 to 3 for better layout
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
-          childAspectRatio: 1.8, // Increased from 1.4 to 1.8 to reduce height further
+          childAspectRatio: 1.2,
+          // Adjusted for 3-column layout
           children: [
             _buildManagementCard(
               'Users',
@@ -583,6 +588,30 @@ class _AdminDashboardState extends State<AdminDashboard>
               Colors.purple,
               () => _navigateToContactsManagement(),
               delay: 3200,
+            ),
+            _buildManagementCard(
+              'About',
+              'Manage about section',
+              Icons.info,
+              Colors.pink,
+                  () => _navigateToAboutManagement(),
+              delay: 3400,
+            ),
+            _buildManagementCard(
+              'Profile',
+              'Manage profile section',
+              Icons.person,
+              Colors.teal,
+                  () => _navigateToProfileManagement(),
+              delay: 3600,
+            ),
+            _buildManagementCard(
+              'Projects',
+              'Manage projects section',
+              Icons.folder,
+              Colors.brown,
+                  () => _navigateToProjectsManagement(),
+              delay: 3800,
             ),
           ],
         ),
@@ -692,6 +721,33 @@ class _AdminDashboardState extends State<AdminDashboard>
       context,
       MaterialPageRoute(
         builder: (context) => const ContactsManagementScreen(),
+      ),
+    );
+  }
+
+  void _navigateToAboutManagement() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AboutManagementScreen(),
+      ),
+    );
+  }
+
+  void _navigateToProfileManagement() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ProfileManagementScreen(),
+      ),
+    );
+  }
+
+  void _navigateToProjectsManagement() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ProjectsManagementScreen(),
       ),
     );
   }

@@ -2,23 +2,23 @@ class ProjectModel {
   final String id;
   final String title;
   final String description;
-  final String imageUrl;
+  final String? imageUrl;
   final List<String> technologies;
   final String? liveUrl;
   final String? githubUrl;
   final bool isFeatured;
-  final DateTime createdAt;
+  final DateTime? createdAt;
 
   ProjectModel({
     required this.id,
     required this.title,
     required this.description,
-    required this.imageUrl,
+    this.imageUrl,
     required this.technologies,
     this.liveUrl,
     this.githubUrl,
     this.isFeatured = false,
-    required this.createdAt,
+    this.createdAt,
   });
 
   factory ProjectModel.fromJson(Map<String, dynamic> json) {
@@ -26,12 +26,14 @@ class ProjectModel {
       id: json['id'] ?? '',
       title: json['title'] ?? '',
       description: json['description'] ?? '',
-      imageUrl: json['imageUrl'] ?? '',
+      imageUrl: json['imageUrl'],
       technologies: List<String>.from(json['technologies'] ?? []),
       liveUrl: json['liveUrl'],
       githubUrl: json['githubUrl'],
       isFeatured: json['isFeatured'] ?? false,
-      createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'])
+          : null,
     );
   }
 
@@ -45,7 +47,7 @@ class ProjectModel {
       'liveUrl': liveUrl,
       'githubUrl': githubUrl,
       'isFeatured': isFeatured,
-      'createdAt': createdAt.toIso8601String(),
+      'createdAt': createdAt?.toIso8601String(),
     };
   }
 }

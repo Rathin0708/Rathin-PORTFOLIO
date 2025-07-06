@@ -6,7 +6,7 @@ class AppConstants {
   // Personal Information
   static const String name = "Rathin";
   static const String fullName = "Rathin";
-  static const String tagline = "Flutter Developer | Firebase Expert | UI/UX Enthusiast";
+  static const String tagline = "Flutter Developer | UI/UX Enthusiast";
   static const String email = "rathin007008@gmail.com";
   static const String phone = "+91 7395837797";
   static const String location = "Chennai, Tamil Nadu, India";
@@ -52,7 +52,6 @@ class AppConstants {
     "Firebase",
     "Provider",
     "REST APIs",
-    "GraphQL",
     "Git",
     "UI/UX Design",
     "Responsive Design",
@@ -63,7 +62,6 @@ class AppConstants {
     "App Store Deployment",
     "Play Store Deployment",
     "Web Development",
-    "Desktop Development",
   ];
 
   // Navigation Items

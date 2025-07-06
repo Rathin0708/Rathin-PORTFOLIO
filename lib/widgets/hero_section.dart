@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../utils/constants.dart';
 import '../utils/responsive.dart';
 import '../utils/app_theme.dart';
@@ -23,16 +25,52 @@ class HeroSection extends StatelessWidget {
       ),
       child: Padding(
         padding: Responsive.getPadding(context),
-        child: Responsive.responsiveWidget(
-          context: context,
-          mobile: _buildMobileLayout(context),
-          desktop: _buildDesktopLayout(context),
+        child: StreamBuilder<DocumentSnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('portfolio_settings')
+              .doc('profile')
+              .snapshots(),
+          builder: (context, profileSnapshot) {
+            return StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('portfolio_settings')
+                  .doc('about')
+                  .snapshots(),
+              builder: (context, aboutSnapshot) {
+                // Get profile data or use defaults
+                final profileData = profileSnapshot.hasData &&
+                    profileSnapshot.data!.exists
+                    ? profileSnapshot.data!.data() as Map<String, dynamic>?
+                    : null;
+
+                // Get about data or use defaults  
+                final aboutData = aboutSnapshot.hasData &&
+                    aboutSnapshot.data!.exists
+                    ? aboutSnapshot.data!.data() as Map<String, dynamic>?
+                    : null;
+
+                final name = profileData?['name'] ?? AppConstants.name;
+                final tagline = profileData?['tagline'] ?? AppConstants.tagline;
+                final bio = aboutData?['bio'] ?? AppConstants.bio;
+                final profileImage = profileData?['profileImage'] ?? '';
+
+                return Responsive.responsiveWidget(
+                  context: context,
+                  mobile: _buildMobileLayout(
+                      context, name, tagline, bio, profileImage),
+                  desktop: _buildDesktopLayout(
+                      context, name, tagline, bio, profileImage),
+                );
+              },
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _buildMobileLayout(BuildContext context) {
+  Widget _buildMobileLayout(BuildContext context, String name, String tagline,
+      String bio, String profileImage) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -45,13 +83,13 @@ class HeroSection extends StatelessWidget {
                 child: FadeInAnimation(child: widget),
               ),
               children: [
-                _buildProfileImage(context),
+                _buildProfileImage(context, profileImage),
                 const SizedBox(height: AppConstants.paddingLarge),
-                _buildGreeting(context),
+                _buildGreeting(context, name),
                 const SizedBox(height: AppConstants.paddingMedium),
-                _buildAnimatedTagline(context),
+                _buildAnimatedTagline(context, tagline),
                 const SizedBox(height: AppConstants.paddingLarge),
-                _buildDescription(context),
+                _buildDescription(context, bio),
                 const SizedBox(height: AppConstants.paddingXLarge),
                 _buildActionButtons(context),
               ],
@@ -62,7 +100,8 @@ class HeroSection extends StatelessWidget {
     );
   }
 
-  Widget _buildDesktopLayout(BuildContext context) {
+  Widget _buildDesktopLayout(BuildContext context, String name, String tagline,
+      String bio, String profileImage) {
     return Row(
       children: [
         Expanded(
@@ -78,11 +117,11 @@ class HeroSection extends StatelessWidget {
                   child: FadeInAnimation(child: widget),
                 ),
                 children: [
-                  _buildGreeting(context),
+                  _buildGreeting(context, name),
                   const SizedBox(height: AppConstants.paddingMedium),
-                  _buildAnimatedTagline(context),
+                  _buildAnimatedTagline(context, tagline),
                   const SizedBox(height: AppConstants.paddingLarge),
-                  _buildDescription(context),
+                  _buildDescription(context, bio),
                   const SizedBox(height: AppConstants.paddingXLarge),
                   _buildActionButtons(context),
                 ],
@@ -99,7 +138,7 @@ class HeroSection extends StatelessWidget {
             child: SlideAnimation(
               horizontalOffset: 50.0,
               child: FadeInAnimation(
-                child: _buildProfileImage(context),
+                child: _buildProfileImage(context, profileImage),
               ),
             ),
           ),
@@ -108,7 +147,7 @@ class HeroSection extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileImage(BuildContext context) {
+  Widget _buildProfileImage(BuildContext context, String profileImage) {
     final size = Responsive.isMobile(context) ? 200.0 : 300.0;
     
     return Container(
@@ -134,16 +173,16 @@ class HeroSection extends StatelessWidget {
             ),
           ),
           child: ClipOval(
-            child: _buildActualProfileImage(),
+            child: _buildActualProfileImage(profileImage),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildGreeting(BuildContext context) {
+  Widget _buildGreeting(BuildContext context, String name) {
     return Text(
-      "Hey, I'm ${AppConstants.name} 👋",
+      "Hey, I'm $name 👋",
       style: Theme.of(context).textTheme.displayLarge?.copyWith(
         color: Colors.white,
         fontSize: Responsive.getFontSize(
@@ -157,39 +196,13 @@ class HeroSection extends StatelessWidget {
     );
   }
 
-  Widget _buildAnimatedTagline(BuildContext context) {
+  Widget _buildAnimatedTagline(BuildContext context, String tagline) {
     return SizedBox(
       height: 60,
       child: AnimatedTextKit(
         animatedTexts: [
           TypewriterAnimatedText(
-            'Flutter Developer',
-            textStyle: Theme.of(context).textTheme.headlineLarge?.copyWith(
-              color: AppTheme.secondaryColor,
-              fontSize: Responsive.getFontSize(
-                context,
-                mobile: 20,
-                tablet: 24,
-                desktop: 28,
-              ),
-            ),
-            speed: const Duration(milliseconds: 100),
-          ),
-          TypewriterAnimatedText(
-            'Firebase Expert',
-            textStyle: Theme.of(context).textTheme.headlineLarge?.copyWith(
-              color: AppTheme.secondaryColor,
-              fontSize: Responsive.getFontSize(
-                context,
-                mobile: 20,
-                tablet: 24,
-                desktop: 28,
-              ),
-            ),
-            speed: const Duration(milliseconds: 100),
-          ),
-          TypewriterAnimatedText(
-            'UI/UX Enthusiast',
+            tagline,
             textStyle: Theme.of(context).textTheme.headlineLarge?.copyWith(
               color: AppTheme.secondaryColor,
               fontSize: Responsive.getFontSize(
@@ -208,9 +221,9 @@ class HeroSection extends StatelessWidget {
     );
   }
 
-  Widget _buildDescription(BuildContext context) {
+  Widget _buildDescription(BuildContext context, String bio) {
     return Text(
-      AppConstants.bio,
+      bio,
       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
         color: Colors.white.withOpacity(0.9),
         fontSize: Responsive.getFontSize(
@@ -296,15 +309,15 @@ class HeroSection extends StatelessWidget {
     );
   }
 
-  Widget _buildActualProfileImage() {
-    return Image.asset(
-      'assets/images/profile.jpg',
-      fit: BoxFit.cover,
-      width: double.infinity,
-      height: double.infinity,
-      errorBuilder: (context, error, stackTrace) {
-        // Fallback to a beautiful gradient with initials if image not found
-        return Container(
+  Widget _buildActualProfileImage(String profileImage) {
+    if (profileImage.isNotEmpty) {
+      return CachedNetworkImage(
+        imageUrl: profileImage,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        placeholder: (context, url) =>
+            Container(
           width: double.infinity,
           height: double.infinity,
           decoration: const BoxDecoration(
@@ -317,20 +330,45 @@ class HeroSection extends StatelessWidget {
               end: Alignment.bottomRight,
             ),
           ),
-          child: Center(
-            child: Text(
-              AppConstants.name.isNotEmpty
-                  ? AppConstants.name.substring(0, 1).toUpperCase()
-                  : 'R',
-              style: const TextStyle(
-                fontSize: 60,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+          child: const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
             ),
           ),
-        );
-      },
+        ),
+        errorWidget: (context, url, error) => _buildFallbackProfileImage(),
+      );
+    } else {
+      return _buildFallbackProfileImage();
+    }
+  }
+
+  Widget _buildFallbackProfileImage() {
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Color(0xFF667eea),
+            Color(0xFF764ba2),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Center(
+        child: Text(
+          AppConstants.name.isNotEmpty
+              ? AppConstants.name.substring(0, 1).toUpperCase()
+              : 'R',
+          style: const TextStyle(
+            fontSize: 60,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+      ),
     );
   }
 

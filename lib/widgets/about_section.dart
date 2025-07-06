@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../utils/constants.dart';
 import '../utils/responsive.dart';
 
@@ -18,10 +20,67 @@ class AboutSection extends StatelessWidget {
         children: [
           _buildSectionTitle(context),
           const SizedBox(height: AppConstants.paddingXLarge),
-          Responsive.responsiveWidget(
-            context: context,
-            mobile: _buildMobileLayout(context),
-            desktop: _buildDesktopLayout(context),
+          StreamBuilder<DocumentSnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('portfolio_settings')
+                .doc('profile')
+                .snapshots(),
+            builder: (context, profileSnapshot) {
+              return StreamBuilder<DocumentSnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('portfolio_settings')
+                    .doc('about')
+                    .snapshots(),
+                builder: (context, aboutSnapshot) {
+                  // Get profile data or use defaults
+                  final profileData = profileSnapshot.hasData &&
+                      profileSnapshot.data!.exists
+                      ? profileSnapshot.data!.data() as Map<String, dynamic>?
+                      : null;
+
+                  // Get about data or use defaults  
+                  final aboutData = aboutSnapshot.hasData &&
+                      aboutSnapshot.data!.exists
+                      ? aboutSnapshot.data!.data() as Map<String, dynamic>?
+                      : null;
+
+                  final name = profileData?['name'] ?? AppConstants.fullName;
+                  final tagline = profileData?['tagline'] ??
+                      AppConstants.tagline;
+                  final location = profileData?['location'] ??
+                      AppConstants.location;
+                  final profileImage = profileData?['profileImage'] ?? '';
+                  final resumeUrl = profileData?['resumeUrl'] ??
+                      AppConstants.resumeUrl;
+                  final bio = aboutData?['bio'] ?? AppConstants.bio;
+                  final skills = aboutData?['skills'] != null
+                      ? List<String>.from(aboutData!['skills'])
+                      : AppConstants.skills;
+
+                  return Responsive.responsiveWidget(
+                    context: context,
+                    mobile: _buildMobileLayout(
+                        context,
+                        name,
+                        tagline,
+                        location,
+                        profileImage,
+                        bio,
+                        skills,
+                        resumeUrl),
+                    desktop: _buildDesktopLayout(
+                        context,
+                        name,
+                        tagline,
+                        location,
+                        profileImage,
+                        bio,
+                        skills,
+                        resumeUrl),
+                  );
+                },
+              );
+            },
           ),
         ],
       ),
@@ -60,7 +119,9 @@ class AboutSection extends StatelessWidget {
     );
   }
 
-  Widget _buildMobileLayout(BuildContext context) {
+  Widget _buildMobileLayout(BuildContext context, String name, String tagline,
+      String location, String profileImage, String bio, List<String> skills,
+      String resumeUrl) {
     return AnimationLimiter(
       child: Column(
         children: AnimationConfiguration.toStaggeredList(
@@ -70,18 +131,21 @@ class AboutSection extends StatelessWidget {
             child: FadeInAnimation(child: widget),
           ),
           children: [
-            _buildProfileCard(context),
+            _buildProfileCard(
+                context, name, tagline, location, profileImage, bio),
             const SizedBox(height: AppConstants.paddingLarge),
-            _buildSkillsSection(context),
+            _buildSkillsSection(context, skills),
             const SizedBox(height: AppConstants.paddingLarge),
-            _buildResumeButton(context),
+            _buildResumeButton(context, resumeUrl),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildDesktopLayout(BuildContext context) {
+  Widget _buildDesktopLayout(BuildContext context, String name, String tagline,
+      String location, String profileImage, String bio, List<String> skills,
+      String resumeUrl) {
     return AnimationLimiter(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,7 +158,8 @@ class AboutSection extends StatelessWidget {
               child: SlideAnimation(
                 horizontalOffset: -50.0,
                 child: FadeInAnimation(
-                  child: _buildProfileCard(context),
+                  child: _buildProfileCard(
+                      context, name, tagline, location, profileImage, bio),
                 ),
               ),
             ),
@@ -110,7 +175,7 @@ class AboutSection extends StatelessWidget {
                   child: SlideAnimation(
                     horizontalOffset: 50.0,
                     child: FadeInAnimation(
-                      child: _buildSkillsSection(context),
+                      child: _buildSkillsSection(context, skills),
                     ),
                   ),
                 ),
@@ -121,7 +186,7 @@ class AboutSection extends StatelessWidget {
                   child: SlideAnimation(
                     horizontalOffset: 50.0,
                     child: FadeInAnimation(
-                      child: _buildResumeButton(context),
+                      child: _buildResumeButton(context, resumeUrl),
                     ),
                   ),
                 ),
@@ -133,7 +198,8 @@ class AboutSection extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileCard(BuildContext context) {
+  Widget _buildProfileCard(BuildContext context, String name, String tagline,
+      String location, String profileImage, String bio) {
     return Card(
       elevation: 8,
       child: Padding(
@@ -155,7 +221,8 @@ class AboutSection extends StatelessWidget {
                 ],
               ),
               child: ClipOval(
-                child: Container(
+                child: profileImage.isEmpty
+                    ? Container(
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
                       colors: [Colors.blue, Colors.purple],
@@ -168,19 +235,21 @@ class AboutSection extends StatelessWidget {
                     size: 80,
                     color: Colors.white,
                   ),
-                  // Replace with your actual profile image:
-                  // Image.asset(
-                  //   'assets/images/profile.jpg',
-                  //   fit: BoxFit.cover,
-                  // ),
-                ),
+                )
+                    : CachedNetworkImage(
+                  imageUrl: profileImage,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) =>
+                  const Center(child: CircularProgressIndicator()),
+                  errorWidget: (context, url, error) => const Icon(Icons.error),
+                    ),
               ),
             ),
             const SizedBox(height: AppConstants.paddingLarge),
             
             // Name and Title
             Text(
-              AppConstants.fullName,
+              name,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -188,7 +257,7 @@ class AboutSection extends StatelessWidget {
             ),
             const SizedBox(height: AppConstants.paddingSmall),
             Text(
-              AppConstants.tagline,
+              tagline,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: Theme.of(context).primaryColor,
                 fontWeight: FontWeight.w500,
@@ -208,7 +277,7 @@ class AboutSection extends StatelessWidget {
                 ),
                 const SizedBox(width: AppConstants.paddingSmall),
                 Text(
-                  AppConstants.location,
+                  location,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
@@ -217,7 +286,7 @@ class AboutSection extends StatelessWidget {
             
             // Bio
             Text(
-              AppConstants.bio,
+              bio,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 height: 1.6,
               ),
@@ -229,7 +298,7 @@ class AboutSection extends StatelessWidget {
     );
   }
 
-  Widget _buildSkillsSection(BuildContext context) {
+  Widget _buildSkillsSection(BuildContext context, List<String> skills) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -243,9 +312,9 @@ class AboutSection extends StatelessWidget {
         Wrap(
           spacing: AppConstants.paddingMedium,
           runSpacing: AppConstants.paddingMedium,
-          children: AppConstants.skills.map((skill) {
+          children: skills.map((skill) {
             return AnimationConfiguration.staggeredGrid(
-              position: AppConstants.skills.indexOf(skill),
+              position: skills.indexOf(skill),
               duration: AppConstants.shortAnimation,
               columnCount: Responsive.getCrossAxisCount(
                 context,
@@ -288,11 +357,11 @@ class AboutSection extends StatelessWidget {
     );
   }
 
-  Widget _buildResumeButton(BuildContext context) {
+  Widget _buildResumeButton(BuildContext context, String resumeUrl) {
     return SizedBox(
       width: Responsive.isMobile(context) ? double.infinity : 200,
       child: ElevatedButton.icon(
-        onPressed: () => _downloadResume(),
+        onPressed: () => _downloadResume(resumeUrl),
         icon: const Icon(Icons.download),
         label: const Text('Download Resume'),
         style: ElevatedButton.styleFrom(
@@ -304,8 +373,8 @@ class AboutSection extends StatelessWidget {
     );
   }
 
-  Future<void> _downloadResume() async {
-    final Uri url = Uri.parse(AppConstants.resumeUrl);
+  Future<void> _downloadResume(String resumeUrl) async {
+    final Uri url = Uri.parse(resumeUrl);
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     }

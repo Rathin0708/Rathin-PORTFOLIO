@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../models/project_model.dart';
 import '../utils/constants.dart';
 import '../utils/responsive.dart';
@@ -11,10 +13,6 @@ class ProjectsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final projects = AppConstants.sampleProjects
-        .map((data) => ProjectModel.fromJson(data))
-        .toList();
-
     return Container(
       padding: EdgeInsets.symmetric(
         vertical: AppConstants.paddingXLarge * 2,
@@ -27,7 +25,35 @@ class ProjectsSection extends StatelessWidget {
         children: [
           _buildSectionTitle(context),
           const SizedBox(height: AppConstants.paddingXLarge),
-          _buildProjectsGrid(context, projects),
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('projects')
+                .orderBy('createdAt', descending: true)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return Center(
+                  child: Text('Error loading projects: ${snapshot.error}'),
+                );
+              }
+
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final projects = snapshot.data?.docs.map((doc) {
+                final data = doc.data() as Map<String, dynamic>;
+                data['id'] = doc.id;
+                return ProjectModel.fromJson(data);
+              }).toList() ?? [];
+
+              if (projects.isEmpty) {
+                return _buildEmptyState(context);
+              }
+
+              return _buildProjectsGrid(context, projects);
+            },
+          ),
         ],
       ),
     );
@@ -106,6 +132,18 @@ class ProjectsSection extends StatelessWidget {
     );
   }
 
+  Widget _buildEmptyState(BuildContext context) {
+    return Center(
+      child: Text(
+        'No projects found',
+        style: Theme
+            .of(context)
+            .textTheme
+            .bodyLarge,
+      ),
+    );
+  }
+
   Widget _buildProjectCard(BuildContext context, ProjectModel project) {
     return Card(
       elevation: 8,
@@ -117,28 +155,19 @@ class ProjectsSection extends StatelessWidget {
             // Project Image
             Expanded(
               flex: 3,
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Theme.of(context).primaryColor,
-                      Theme.of(context).primaryColor.withOpacity(0.7),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+              child: CachedNetworkImage(
+                imageUrl: project.imageUrl ?? '',
+                fit: BoxFit.cover,
+                placeholder: (context, url) =>
+                const Center(
+                  child: CircularProgressIndicator(),
                 ),
-                child: const Icon(
-                  Icons.phone_android,
+                errorWidget: (context, url, error) =>
+                const Icon(
+                  Icons.error,
                   size: 80,
-                  color: Colors.white,
+                  color: Colors.red,
                 ),
-                // Replace with actual project image:
-                // Image.asset(
-                //   project.imageUrl,
-                //   fit: BoxFit.cover,
-                // ),
               ),
             ),
             
