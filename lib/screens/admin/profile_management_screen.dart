@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -6,7 +7,7 @@ import 'dart:io';
 import '../../utils/app_theme.dart';
 import '../../services/admin_service.dart';
 import '../../services/file_upload_service.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ProfileManagementScreen extends StatefulWidget {
   const ProfileManagementScreen({super.key});
@@ -114,43 +115,48 @@ class _ProfileManagementScreenState extends State<ProfileManagementScreen> {
       builder: (context) =>
           AlertDialog(
             title: const Text('Upload Profile Image'),
-            content: const Text(
-                'Choose an option to upload your profile image'),
+            content: Text(
+                kIsWeb
+                    ? 'Choose an image file from your computer'
+                    : 'Choose an option to upload your profile image'
+            ),
             actions: [
-              TextButton(
-                onPressed: () async {
-                  Navigator.pop(context);
-                  await _pickImageFromCamera();
-                },
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.camera_alt),
-                    SizedBox(width: 8),
-                    Text('Camera'),
-                  ],
-                ),
+              if (!kIsWeb) ...[
+                TextButton(
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    await _pickImageFromCamera();
+                  },
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.camera_alt),
+                      SizedBox(width: 8),
+                      Text('Camera'),
+                    ],
               ),
-              TextButton(
-                onPressed: () async {
-                  Navigator.pop(context);
-                  await _pickImageFromGallery();
-                },
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.photo_library),
-                    SizedBox(width: 8),
-                    Text('Gallery'),
-                  ],
-                ),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
-              ),
-            ],
+            ),
+          ],
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _pickImageFromGallery();
+            },
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(kIsWeb ? Icons.file_upload : Icons.photo_library),
+                const SizedBox(width: 8),
+                Text(kIsWeb ? 'Choose File' : 'Gallery'),
+              ],
+            ),
           ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -163,42 +169,54 @@ class _ProfileManagementScreenState extends State<ProfileManagementScreen> {
         final fileName = FileUploadService.generateFileName(pickedFile.name);
         String? downloadUrl;
 
-        if (Platform.isAndroid || Platform.isIOS) {
-          final file = File(pickedFile.path);
-          downloadUrl = await FileUploadService.uploadProfileImage(
-            fileName: fileName,
-            file: file,
-          );
-        } else {
+        if (kIsWeb) {
           final bytes = await pickedFile.readAsBytes();
           downloadUrl = await FileUploadService.uploadProfileImage(
             fileName: fileName,
             bytes: bytes,
           );
+        } else {
+          final file = File(pickedFile.path);
+          downloadUrl = await FileUploadService.uploadProfileImage(
+            fileName: fileName,
+            file: file,
+          );
         }
 
-        if (downloadUrl != null && downloadUrl.isNotEmpty) {
-          final finalUrl = downloadUrl as String;
+        if (downloadUrl case final String url when url.isNotEmpty) {
           setState(() {
-            _profileImageController.text = finalUrl;
+            _profileImageController.text = url;
           });
+
+          // Auto-save profile data to Firebase immediately
+          await _saveProfileImageToFirestore(url);
+
+          if (!mounted) return;
+
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('✅ Profile image uploaded successfully!'),
+              content: Text(
+                  '✅ Profile image uploaded and updated successfully!'),
               backgroundColor: Colors.green,
             ),
           );
+        } else {
+          throw Exception('Failed to get download URL');
         }
       }
     } catch (e) {
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(' Error uploading image: $e'),
+          content: Text('❌ Error uploading image: $e'),
           backgroundColor: Colors.red,
         ),
       );
     } finally {
-      setState(() => _isUploadingProfileImage = false);
+      if (mounted) {
+        setState(() => _isUploadingProfileImage = false);
+      }
     }
   }
 
@@ -211,42 +229,73 @@ class _ProfileManagementScreenState extends State<ProfileManagementScreen> {
         final fileName = FileUploadService.generateFileName(pickedFile.name);
         String? downloadUrl;
 
-        if (Platform.isAndroid || Platform.isIOS) {
-          final file = File(pickedFile.path!);
-          downloadUrl = await FileUploadService.uploadProfileImage(
-            fileName: fileName,
-            file: file,
-          );
-        } else {
+        if (kIsWeb) {
           final bytes = await pickedFile.readAsBytes();
           downloadUrl = await FileUploadService.uploadProfileImage(
             fileName: fileName,
             bytes: bytes,
           );
+        } else {
+          final file = File(pickedFile.path);
+          downloadUrl = await FileUploadService.uploadProfileImage(
+            fileName: fileName,
+            file: file,
+          );
         }
 
-        if (downloadUrl != null && downloadUrl.isNotEmpty) {
-          final finalUrl = downloadUrl as String;
+        if (downloadUrl case final String url when url.isNotEmpty) {
           setState(() {
-            _profileImageController.text = finalUrl;
+            _profileImageController.text = url;
           });
+
+          // Auto-save profile data to Firebase immediately
+          await _saveProfileImageToFirestore(url);
+
+          if (!mounted) return;
+
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text(' Profile image uploaded successfully!'),
+              content: Text(
+                  '✅ Profile image uploaded and updated successfully!'),
               backgroundColor: Colors.green,
             ),
           );
+        } else {
+          throw Exception('Failed to get download URL');
         }
       }
     } catch (e) {
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(' Error uploading image: $e'),
+          content: Text('❌ Error uploading image: $e'),
           backgroundColor: Colors.red,
         ),
       );
     } finally {
-      setState(() => _isUploadingProfileImage = false);
+      if (mounted) {
+        setState(() => _isUploadingProfileImage = false);
+      }
+    }
+  }
+
+  // New method to save only profile image to Firestore immediately
+  Future<void> _saveProfileImageToFirestore(String imageUrl) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('portfolio_settings')
+          .doc('profile')
+          .set({
+        'profileImage': imageUrl,
+        'updatedAt': FieldValue.serverTimestamp(),
+        'updatedBy': AdminService.currentUser?.email ?? 'admin',
+      }, SetOptions(merge: true));
+
+      print('✅ Profile image saved to Firestore: $imageUrl');
+    } catch (e) {
+      print('❌ Error saving profile image to Firestore: $e');
+      rethrow;
     }
   }
 
@@ -259,41 +308,60 @@ class _ProfileManagementScreenState extends State<ProfileManagementScreen> {
         final fileName = FileUploadService.generateFileName(pickedFile.name);
         String? downloadUrl;
 
-        if (Platform.isAndroid || Platform.isIOS) {
+        if (kIsWeb) {
+          downloadUrl = await FileUploadService.uploadResume(
+            fileName: fileName,
+            bytes: pickedFile.bytes,
+          );
+        } else {
           final file = File(pickedFile.path!);
           downloadUrl = await FileUploadService.uploadResume(
             fileName: fileName,
             file: file,
           );
-        } else {
-          downloadUrl = await FileUploadService.uploadResume(
-            fileName: fileName,
-            bytes: pickedFile.bytes,
-          );
         }
 
-        if (downloadUrl != null && downloadUrl.isNotEmpty) {
-          final finalUrl = downloadUrl as String;
+        if (downloadUrl case final String url when url.isNotEmpty) {
           setState(() {
-            _resumeUrlController.text = finalUrl;
+            _resumeUrlController.text = url;
           });
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text(' Resume uploaded successfully!'),
+              content: Text('✅ Resume uploaded successfully!'),
               backgroundColor: Colors.green,
             ),
           );
+        } else {
+          throw Exception('Failed to get download URL');
         }
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(' Error uploading resume: $e'),
+          content: Text('❌ Error uploading resume: $e'),
           backgroundColor: Colors.red,
         ),
       );
     } finally {
       setState(() => _isUploadingResume = false);
+    }
+  }
+
+  Future<void> _testResumeDownload() async {
+    try {
+      final Uri url = Uri.parse(_resumeUrlController.text);
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        throw Exception('Could not launch URL');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('❌ Error opening resume: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -494,11 +562,42 @@ class _ProfileManagementScreenState extends State<ProfileManagementScreen> {
                             ),
                             const SizedBox(height: 16),
                             _profileImageController.text.isNotEmpty
-                                ? CachedNetworkImage(
-                              imageUrl: _profileImageController.text,
-                              width: 100,
-                              height: 100,
-                              fit: BoxFit.cover,
+                                ? Container(
+                              margin: const EdgeInsets.only(top: 16),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: AppTheme.primaryColor.withOpacity(0.3),
+                                ),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: CachedNetworkImage(
+                                  imageUrl: _profileImageController.text,
+                                  width: 120,
+                                  height: 120,
+                                  fit: BoxFit.cover,
+                                  placeholder: (context, url) =>
+                                      Container(
+                                        width: 120,
+                                        height: 120,
+                                        color: Colors.grey[200],
+                                        child: const Center(
+                                          child: CircularProgressIndicator(),
+                                        ),
+                                      ),
+                                  errorWidget: (context, url, error) =>
+                                      Container(
+                                        width: 120,
+                                        height: 120,
+                                        color: Colors.grey[200],
+                                        child: const Icon(
+                                          Icons.error,
+                                          color: Colors.red,
+                                        ),
+                                      ),
+                                ),
+                              ),
                             )
                                 : const SizedBox(),
                           ],
@@ -559,7 +658,57 @@ class _ProfileManagementScreenState extends State<ProfileManagementScreen> {
                             ),
                             const SizedBox(height: 16),
                             _resumeUrlController.text.isNotEmpty
-                                ? Text(_resumeUrlController.text)
+                                ? Container(
+                              margin: const EdgeInsets.only(top: 16),
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.green.withOpacity(0.3),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.description,
+                                    color: Colors.green,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          'Resume Uploaded',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.green,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Click download button to test',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  IconButton(
+                                    onPressed: () => _testResumeDownload(),
+                                    icon: const Icon(
+                                      Icons.download,
+                                      color: Colors.green,
+                                    ),
+                                    tooltip: 'Test Download',
+                                  ),
+                                ],
+                              ),
+                            )
                                 : const SizedBox(),
                           ],
                         ),

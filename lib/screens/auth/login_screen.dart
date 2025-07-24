@@ -5,7 +5,6 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/app_theme.dart';
-import '../../utils/constants.dart';
 import '../../utils/admin_setup.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
@@ -565,6 +564,8 @@ class _LoginScreenState extends State<LoginScreen>
         password: AdminSetup.adminPassword,
       );
 
+      if (!mounted) return; // Check if widget is still mounted
+
       if (success) {
         Navigator.pushReplacement(
           context,
@@ -578,14 +579,20 @@ class _LoginScreenState extends State<LoginScreen>
         );
       } else {
         // If login fails, show password reset option
-        _showPasswordResetDialog();
+        if (mounted) {
+          _showPasswordResetDialog();
+        }
       }
     } catch (e) {
-      _showPasswordResetDialog();
+      if (mounted) {
+        _showPasswordResetDialog();
+      }
     }
   }
 
   void _showPasswordResetDialog() {
+    if (!mounted) return; // Safety check
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -624,6 +631,8 @@ class _LoginScreenState extends State<LoginScreen>
 
   Future<void> _handleAdminSetup() async {
     try {
+      if (!mounted) return; // Check before showing dialog
+
       // Show loading dialog
       showDialog(
         context: context,
@@ -642,6 +651,8 @@ class _LoginScreenState extends State<LoginScreen>
       // Create admin account
       final success = await AdminSetup.createAdminAccount();
 
+      if (!mounted) return; // Check before closing dialog
+
       // Close loading dialog
       Navigator.pop(context);
 
@@ -653,31 +664,39 @@ class _LoginScreenState extends State<LoginScreen>
         });
 
         // Show options dialog
-        _showAdminSetupSuccessDialog();
+        if (mounted) {
+          _showAdminSetupSuccessDialog();
+        }
       } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to setup admin account. Please try again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // Close loading dialog if still open and widget is mounted
+      if (mounted && Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to setup admin account. Please try again.'),
+          SnackBar(
+            content: Text('Error: $e'),
             backgroundColor: Colors.red,
           ),
         );
       }
-    } catch (e) {
-      // Close loading dialog if still open
-      if (Navigator.canPop(context)) {
-        Navigator.pop(context);
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
     }
   }
 
   void _showAdminSetupSuccessDialog() {
+    if (!mounted) return; // Safety check
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -723,6 +742,9 @@ class _LoginScreenState extends State<LoginScreen>
   Future<void> _sendPasswordResetEmail() async {
     try {
       await AdminSetup.resetAdminPassword();
+
+      if (!mounted) return; // Check before showing SnackBar
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Password reset email sent to rathin007008@gmail.com'),
@@ -730,6 +752,8 @@ class _LoginScreenState extends State<LoginScreen>
         ),
       );
     } catch (e) {
+      if (!mounted) return; // Check before showing SnackBar
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to send reset email: $e'),
@@ -749,6 +773,8 @@ class _LoginScreenState extends State<LoginScreen>
         password: formData['password'],
       );
 
+      if (!mounted) return; // Check if widget is still mounted
+
       if (success) {
         Navigator.pushReplacement(
           context,
@@ -761,9 +787,7 @@ class _LoginScreenState extends State<LoginScreen>
           ),
         );
       } else {
-        if (mounted) {
-          _showErrorSnackBar(authProvider.error ?? 'Login failed');
-        }
+        _showErrorSnackBar(authProvider.error ?? 'Login failed');
       }
     }
   }
@@ -772,6 +796,8 @@ class _LoginScreenState extends State<LoginScreen>
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     final success = await authProvider.signInWithGoogle();
+
+    if (!mounted) return; // Check if widget is still mounted
 
     if (success) {
       Navigator.pushReplacement(
@@ -785,9 +811,7 @@ class _LoginScreenState extends State<LoginScreen>
         ),
       );
     } else {
-      if (mounted) {
-        _showErrorSnackBar(authProvider.error ?? 'Google sign-in failed');
-      }
+      _showErrorSnackBar(authProvider.error ?? 'Google sign-in failed');
     }
   }
 

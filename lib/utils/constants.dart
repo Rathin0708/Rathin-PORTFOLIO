@@ -19,7 +19,7 @@ class AppConstants {
       "mobile, web, and desktop platforms.";
 
   // Resume URL (Firebase Storage or Google Drive)
-  static const String resumeUrl = "https://drive.google.com/file/d/your-resume-id/view";
+  static const String resumeUrl = "";
 
   // Social Media Links
   static final List<SocialLink> socialLinks = [

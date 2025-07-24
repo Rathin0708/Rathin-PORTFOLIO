@@ -533,6 +533,8 @@ class _RegisterScreenState extends State<RegisterScreen>
         name: formData['name'],
       );
 
+      if (!mounted) return; // Check if widget is still mounted
+
       if (success) {
         Navigator.pushReplacement(
           context,
@@ -555,6 +557,8 @@ class _RegisterScreenState extends State<RegisterScreen>
 
     final success = await authProvider.signInWithGoogle();
 
+    if (!mounted) return; // Check if widget is still mounted
+
     if (success) {
       Navigator.pushReplacement(
         context,
@@ -572,6 +576,8 @@ class _RegisterScreenState extends State<RegisterScreen>
   }
 
   void _showErrorSnackBar(String message) {
+    if (!mounted) return; // Safety check
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),

@@ -310,33 +310,43 @@ class HeroSection extends StatelessWidget {
   }
 
   Widget _buildActualProfileImage(String profileImage) {
+    // Check if it's a local asset
+    if (profileImage.startsWith('assets/')) {
+      return Image.asset(
+        profileImage,
+        width: 350,
+        height: 350,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          print(' Error loading asset profile image: $error');
+          return _buildFallbackProfileImage();
+        },
+      );
+    }
+
+    // Handle network images (Firebase URLs)
     if (profileImage.isNotEmpty) {
       return CachedNetworkImage(
         imageUrl: profileImage,
+        width: 350,
+        height: 350,
         fit: BoxFit.cover,
-        width: double.infinity,
-        height: double.infinity,
         placeholder: (context, url) =>
             Container(
-          width: double.infinity,
-          height: double.infinity,
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Color(0xFF667eea),
-                Color(0xFF764ba2),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
+              width: 350,
+              height: 350,
+              color: Colors.grey[200],
           child: const Center(
             child: CircularProgressIndicator(
               valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              strokeWidth: 3,
             ),
           ),
         ),
-        errorWidget: (context, url, error) => _buildFallbackProfileImage(),
+        errorWidget: (context, url, error) {
+          print(' Error loading profile image: $error');
+          return _buildFallbackProfileImage();
+        },
       );
     } else {
       return _buildFallbackProfileImage();
@@ -358,15 +368,26 @@ class HeroSection extends StatelessWidget {
         ),
       ),
       child: Center(
-        child: Text(
-          AppConstants.name.isNotEmpty
-              ? AppConstants.name.substring(0, 1).toUpperCase()
-              : 'R',
-          style: const TextStyle(
-            fontSize: 60,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.person,
+              size: 80,
+              color: Colors.white.withOpacity(0.8),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              AppConstants.name.isNotEmpty
+                  ? AppConstants.name.substring(0, 1).toUpperCase()
+                  : 'R',
+              style: const TextStyle(
+                fontSize: 40,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
       ),
     );

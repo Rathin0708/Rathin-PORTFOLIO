@@ -236,13 +236,68 @@ class AboutSection extends StatelessWidget {
                     color: Colors.white,
                   ),
                 )
+                    : profileImage.startsWith('assets/')
+                    ? Image.asset(
+                  profileImage,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    print(
+                        '❌ Error loading asset profile image in about section: $error');
+                    return Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.blue, Colors.purple],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.person,
+                        size: 80,
+                        color: Colors.white,
+                      ),
+                    );
+                  },
+                )
                     : CachedNetworkImage(
                   imageUrl: profileImage,
                   fit: BoxFit.cover,
                   placeholder: (context, url) =>
-                  const Center(child: CircularProgressIndicator()),
-                  errorWidget: (context, url, error) => const Icon(Icons.error),
-                    ),
+                      Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.blue, Colors.purple],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        child: const Center(
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white),
+                            strokeWidth: 2,
+                          ),
+                        ),
+                      ),
+                  errorWidget: (context, url, error) {
+                    print(
+                        '❌ Error loading profile image in about section: $error');
+                    return Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.blue, Colors.purple],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.person,
+                        size: 80,
+                        color: Colors.white,
+                      ),
+                    );
+                  },
+                          ),
               ),
             ),
             const SizedBox(height: AppConstants.paddingLarge),

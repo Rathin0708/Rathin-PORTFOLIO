@@ -35,6 +35,8 @@ class _AboutManagementScreenState extends State<AboutManagementScreen> {
           .doc('about')
           .get();
 
+      if (!mounted) return; // Check if widget is still mounted
+
       if (doc.exists) {
         final data = doc.data()!;
         _bioController.text = data['bio'] ??
@@ -55,11 +57,15 @@ class _AboutManagementScreenState extends State<AboutManagementScreen> {
         ];
       }
     } catch (e) {
+      if (!mounted) return; // Check before showing SnackBar
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error loading about data: $e')),
       );
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -81,6 +87,8 @@ class _AboutManagementScreenState extends State<AboutManagementScreen> {
           .doc('about')
           .set(aboutData, SetOptions(merge: true));
 
+      if (!mounted) return; // Check if widget is still mounted
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('✅ About section updated successfully!'),
@@ -88,6 +96,8 @@ class _AboutManagementScreenState extends State<AboutManagementScreen> {
         ),
       );
     } catch (e) {
+      if (!mounted) return; // Check before showing SnackBar
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('❌ Error saving about data: $e'),
@@ -95,7 +105,9 @@ class _AboutManagementScreenState extends State<AboutManagementScreen> {
         ),
       );
     } finally {
-      setState(() => _isSaving = false);
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
     }
   }
 

@@ -427,6 +427,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
 
       final success = await authProvider.resetPassword(formData['email']);
 
+      if (!mounted) return;
+
       if (success) {
         setState(() {
           _emailSent = true;
@@ -438,6 +440,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
   }
 
   void _showErrorSnackBar(String message) {
+    if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),

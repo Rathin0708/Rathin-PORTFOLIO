@@ -14,6 +14,7 @@ import 'profile_management_screen.dart';
 import 'about_management_screen.dart';
 import 'projects_management_screen.dart';
 import '../portfolio_screen.dart';
+import 'local_profile_management_screen.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -612,6 +613,21 @@ class _AdminDashboardState extends State<AdminDashboard>
               Colors.brown,
                   () => _navigateToProjectsManagement(),
               delay: 3800,
+            ),
+            _buildManagementCard(
+              'Local Profile',
+              'Manage local profile',
+              Icons.account_circle,
+              Colors.purple,
+                  () =>
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (
+                          context) => const LocalProfileManagementScreen(),
+                    ),
+                  ),
+              delay: 4000,
             ),
           ],
         ),
