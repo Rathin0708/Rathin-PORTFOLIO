@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../providers/auth_provider.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/admin_setup.dart';
@@ -22,12 +25,15 @@ class _LoginScreenState extends State<LoginScreen>
   final _formKey = GlobalKey<FormBuilderState>();
   late AnimationController _animationController;
   late AnimationController _backgroundController;
+  late AnimationController _pulseController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _slideAnimation;
   late Animation<double> _scaleAnimation;
   late Animation<double> _backgroundAnimation;
+  late Animation<double> _pulseAnimation;
 
   bool _obscurePassword = true;
+  bool _rememberMe = false;
 
   @override
   void initState() {
@@ -37,12 +43,20 @@ class _LoginScreenState extends State<LoginScreen>
 
   void _setupAnimations() {
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 1200),
+      // Reduced for smoother experience
       vsync: this,
     );
 
     _backgroundController = AnimationController(
-      duration: const Duration(seconds: 20),
+      duration: kIsWeb
+          ? const Duration(seconds: 60) // Much slower on web
+          : const Duration(seconds: 40), // Slower for smoother web performance
+      vsync: this,
+    );
+
+    _pulseController = AnimationController(
+      duration: const Duration(seconds: 4),
       vsync: this,
     );
 
@@ -51,38 +65,69 @@ class _LoginScreenState extends State<LoginScreen>
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _animationController,
-      curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+      curve: const Interval(0.0, 0.8, curve: Curves.easeOutCubic),
     ));
 
     _slideAnimation = Tween<double>(
-      begin: 50.0,
+      begin: 30.0, // Reduced slide distance
       end: 0.0,
     ).animate(CurvedAnimation(
       parent: _animationController,
-      curve: const Interval(0.2, 0.8, curve: Curves.easeOut),
+      curve: const Interval(0.1, 0.9, curve: Curves.easeOutCubic),
     ));
 
     _scaleAnimation = Tween<double>(
-      begin: 0.8,
+      begin: 0.95, // Less scale change for smoother effect
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _animationController,
-      curve: const Interval(0.4, 1.0, curve: Curves.elasticOut),
+      curve: const Interval(0.2, 1.0, curve: Curves.easeOutCubic),
     ));
 
     _backgroundAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(_backgroundController);
+    ).animate(CurvedAnimation(
+      parent: _backgroundController,
+      curve: Curves.linear, // Linear for consistent web performance
+    ));
+
+    _pulseAnimation = Tween<double>(
+      begin: 1.0,
+      end: kIsWeb ? 1.01 : 1.02, // More subtle on web
+    ).animate(CurvedAnimation(
+      parent: _pulseController,
+      curve: Curves.easeInOut,
+    ));
 
     _animationController.forward();
-    _backgroundController.repeat();
+
+    // Start background animation with a simple web check
+    if (!kIsWeb) {
+      _backgroundController.repeat();
+    }
+
+    _pulseController.repeat(reverse: true);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // Now we can safely access MediaQuery and start background animation on large screens
+    if (kIsWeb && MediaQuery
+        .of(context)
+        .size
+        .width > 1200) {
+      _backgroundController.repeat();
+    }
   }
 
   @override
   void dispose() {
     _animationController.dispose();
     _backgroundController.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
@@ -91,14 +136,15 @@ class _LoginScreenState extends State<LoginScreen>
     return Scaffold(
       body: Stack(
         children: [
-          _buildAnimatedBackground(),
+          _buildEnhancedBackground(),
           _buildLoginForm(),
+          _buildTopDecoration(),
         ],
       ),
     );
   }
 
-  Widget _buildAnimatedBackground() {
+  Widget _buildEnhancedBackground() {
     return AnimatedBuilder(
       animation: _backgroundAnimation,
       builder: (context, child) {
@@ -108,34 +154,64 @@ class _LoginScreenState extends State<LoginScreen>
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
+                const Color(0xFF667eea),
+                const Color(0xFF764ba2),
                 AppTheme.primaryColor.withOpacity(0.8),
-                AppTheme.accentColor.withOpacity(0.6),
-                AppTheme.primaryColor.withOpacity(0.9),
               ],
               stops: [
                 0.0,
-                _backgroundAnimation.value,
+                _backgroundAnimation.value * 0.3 + 0.4,
+                // Reduced movement range
                 1.0,
               ],
             ),
           ),
           child: Stack(
             children: [
-              // Floating circles animation
-              ...List.generate(5, (index) {
+              // Reduced floating elements for better web performance
+              ...List.generate(4, (index) { // Reduced from 8 to 4
+                final size = 80.0 + (index * 30);
+                final opacity = 0.03 + (index * 0.02); // More subtle
+                final animOffset = _backgroundAnimation.value *
+                    0.5; // Slower movement
                 return Positioned(
-                  left: (index * 100.0) + (_backgroundAnimation.value * 50),
-                  top: (index * 150.0) + (_backgroundAnimation.value * 30),
-                  child: Container(
-                    width: 80 + (index * 20),
-                    height: 80 + (index * 20),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.1),
+                  left: (index * 200.0) + (animOffset * 20),
+                  // Simplified calculation
+                  top: (index * 150.0) + (animOffset * 15),
+                  child: Transform.rotate(
+                    angle: _backgroundAnimation.value * 0.5 + index,
+                    // Slower rotation
+                    child: Container(
+                      width: size,
+                      height: size,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(size * 0.3),
+                        color: Colors.white.withOpacity(opacity),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.white.withOpacity(0.05),
+                            blurRadius: 8,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );
               }),
+              // Simplified gradient overlay
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withOpacity(0.05),
+                      Colors.black.withOpacity(0.2),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         );
@@ -143,11 +219,32 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
+  Widget _buildTopDecoration() {
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: Container(
+        height: 200.h,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.white.withOpacity(0.1),
+              Colors.transparent,
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildLoginForm() {
     return SafeArea(
       child: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
+          padding: EdgeInsets.all(24.w),
           child: AnimatedBuilder(
             animation: _animationController,
             builder: (context, child) {
@@ -170,16 +267,30 @@ class _LoginScreenState extends State<LoginScreen>
 
   Widget _buildFormContent() {
     return Container(
-      constraints: const BoxConstraints(maxWidth: 400),
-      padding: const EdgeInsets.all(32.0),
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery
+            .of(context)
+            .size
+            .width > 600 ? 450.w : 400.w, // Better web sizing
+        minWidth: 300.w,
+      ),
+      margin: EdgeInsets.symmetric(horizontal: 20.w),
+      padding: EdgeInsets.all(32.w),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.95),
-        borderRadius: BorderRadius.circular(20),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: Colors.black.withOpacity(0.08), // Reduced shadow for web
+            blurRadius: 25,
+            offset: const Offset(0, 12),
+            spreadRadius: 0,
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+            spreadRadius: 0,
           ),
         ],
       ),
@@ -189,270 +300,460 @@ class _LoginScreenState extends State<LoginScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             FadeInDown(
-              duration: const Duration(milliseconds: 800),
-              child: _buildLogo(),
+              duration: const Duration(milliseconds: 600), // Faster for web
+              child: _buildEnhancedLogo(),
             ),
-            const SizedBox(height: 32),
-            FadeInLeft(
-              duration: const Duration(milliseconds: 800),
-              delay: const Duration(milliseconds: 200),
-              child: _buildEmailField(),
-            ),
-            const SizedBox(height: 16),
-            FadeInRight(
-              duration: const Duration(milliseconds: 800),
-              delay: const Duration(milliseconds: 400),
-              child: _buildPasswordField(),
-            ),
-            const SizedBox(height: 8),
-            FadeInUp(
-              duration: const Duration(milliseconds: 800),
-              delay: const Duration(milliseconds: 600),
-              child: _buildForgotPasswordButton(),
-            ),
-            const SizedBox(height: 24),
-            FadeInUp(
-              duration: const Duration(milliseconds: 800),
-              delay: const Duration(milliseconds: 800),
-              child: _buildLoginButton(),
-            ),
-            const SizedBox(height: 16),
-            FadeInUp(
-              duration: const Duration(milliseconds: 800),
-              delay: const Duration(milliseconds: 1000),
-              child: _buildDivider(),
-            ),
-            const SizedBox(height: 16),
-            FadeInUp(
-              duration: const Duration(milliseconds: 800),
-              delay: const Duration(milliseconds: 1200),
-              child: _buildGoogleSignInButton(),
-            ),
-            const SizedBox(height: 24),
-            FadeInUp(
-              duration: const Duration(milliseconds: 800),
-              delay: const Duration(milliseconds: 1400),
-              child: _buildSignUpButton(),
-            ),
-            const SizedBox(height: 16),
-            FadeInUp(
-              duration: const Duration(milliseconds: 800),
-              delay: const Duration(milliseconds: 1600),
-              child: _buildAdminSetupButton(),
-            ),
-            const SizedBox(height: 8),
-            FadeInUp(
-              duration: const Duration(milliseconds: 800),
-              delay: const Duration(milliseconds: 1800),
-              child: _buildDirectAdminLoginButton(),
-            ),
+            SizedBox(height: 40.h),
+            _buildEnhancedEmailField(),
+            SizedBox(height: 20.h),
+            _buildEnhancedPasswordField(),
+            SizedBox(height: 16.h),
+            _buildRememberAndForgot(),
+            SizedBox(height: 32.h),
+            _buildEnhancedLoginButton(),
+            SizedBox(height: 24.h),
+            _buildEnhancedDivider(),
+            SizedBox(height: 24.h),
+            _buildEnhancedGoogleButton(),
+            SizedBox(height: 32.h),
+            _buildSignUpSection(),
+            SizedBox(height: 20.h),
+            // _buildAdminSection(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildLogo() {
-    return Column(
-      children: [
-        Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [AppTheme.primaryColor, AppTheme.accentColor],
-            ),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(
-            Icons.person,
-            size: 40,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          'Welcome Back',
-          style: AppTheme.headingStyle.copyWith(
-            fontSize: 28,
-            color: AppTheme.primaryColor,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Sign in to your account',
-          style: AppTheme.bodyStyle.copyWith(
-            color: Colors.grey[600],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildEmailField() {
-    return FormBuilderTextField(
-      name: 'email',
-      decoration: InputDecoration(
-        labelText: 'Email',
-        prefixIcon: const Icon(Icons.email_outlined),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        filled: true,
-        fillColor: Colors.grey[50],
-      ),
-      validator: FormBuilderValidators.compose([
-        FormBuilderValidators.required(),
-        FormBuilderValidators.email(),
-      ]),
-      keyboardType: TextInputType.emailAddress,
-    );
-  }
-
-  Widget _buildPasswordField() {
-    return FormBuilderTextField(
-      name: 'password',
-      obscureText: _obscurePassword,
-      decoration: InputDecoration(
-        labelText: 'Password',
-        prefixIcon: const Icon(Icons.lock_outlined),
-        suffixIcon: IconButton(
-          icon: Icon(
-            _obscurePassword ? Icons.visibility : Icons.visibility_off,
-          ),
-          onPressed: () {
-            setState(() {
-              _obscurePassword = !_obscurePassword;
-            });
-          },
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        filled: true,
-        fillColor: Colors.grey[50],
-      ),
-      validator: FormBuilderValidators.compose([
-        FormBuilderValidators.required(),
-        FormBuilderValidators.minLength(6),
-      ]),
-    );
-  }
-
-  Widget _buildForgotPasswordButton() {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: TextButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) =>
-                  const ForgotPasswordScreen(),
-              transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                return SlideTransition(
-                  position: animation.drive(
-                    Tween(begin: const Offset(1.0, 0.0), end: Offset.zero),
+  Widget _buildEnhancedLogo() {
+    return AnimatedBuilder(
+      animation: _pulseAnimation,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _pulseAnimation.value,
+          child: Column(
+            children: [
+              Container(
+                width: 90.w,
+                height: 90.w,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color(0xFF667eea),
+                      Color(0xFF764ba2),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  child: child,
-                );
-              },
-            ),
-          );
-        },
-        child: Text(
-          'Forgot Password?',
-          style: TextStyle(color: AppTheme.primaryColor),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLoginButton() {
-    return Consumer<AuthProvider>(
-      builder: (context, authProvider, child) {
-        return SizedBox(
-          width: double.infinity,
-          height: 50,
-          child: ElevatedButton(
-            onPressed: authProvider.isLoading ? null : _handleLogin,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryColor,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primaryColor.withOpacity(0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  FontAwesomeIcons.user,
+                  size: 36.sp,
+                  color: Colors.white,
+                ),
               ),
-              elevation: 2,
-            ),
-            child: authProvider.isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
-                : const Text(
-                    'Sign In',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+              SizedBox(height: 20.h),
+              Text(
+                'Welcome Back! 👋',
+                style: AppTheme.headingStyle.copyWith(
+                  fontSize: 28.sp,
+                  color: AppTheme.primaryColor,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              SizedBox(height: 8.h),
+              Text(
+                'Sign in to continue your journey',
+                style: AppTheme.bodyStyle.copyWith(
+                  color: Colors.grey[600],
+                  fontSize: 16.sp,
+                ),
+              ),
+            ],
           ),
         );
       },
     );
   }
 
-  Widget _buildDivider() {
+  Widget _buildEnhancedEmailField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Email Address',
+          style: TextStyle(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey[700],
+          ),
+        ),
+        SizedBox(height: 8.h),
+        FormBuilderTextField(
+          name: 'email',
+          decoration: InputDecoration(
+            hintText: 'Enter your email',
+            hintStyle: TextStyle(
+              color: Colors.grey[400],
+              fontSize: 16.sp,
+            ),
+            prefixIcon: Container(
+              margin: EdgeInsets.all(12.w),
+              padding: EdgeInsets.all(8.w),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Icon(
+                FontAwesomeIcons.envelope,
+                size: 16.sp,
+                color: AppTheme.primaryColor,
+              ),
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16.r),
+              borderSide: BorderSide(color: Colors.grey[300]!),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16.r),
+              borderSide: BorderSide(color: Colors.grey[300]!),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16.r),
+              borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: EdgeInsets.symmetric(
+                horizontal: 20.w, vertical: 16.h),
+          ),
+          validator: FormBuilderValidators.compose([
+            FormBuilderValidators.required(errorText: 'Email is required'),
+            FormBuilderValidators.email(errorText: 'Enter a valid email'),
+          ]),
+          keyboardType: TextInputType.emailAddress,
+          style: TextStyle(
+            fontSize: 16.sp,
+            color: Colors.black87,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEnhancedPasswordField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Password',
+          style: TextStyle(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey[700],
+          ),
+        ),
+        SizedBox(height: 8.h),
+        FormBuilderTextField(
+          name: 'password',
+          obscureText: _obscurePassword,
+          decoration: InputDecoration(
+            hintText: 'Enter your password',
+            hintStyle: TextStyle(
+              color: Colors.grey[400],
+              fontSize: 16.sp,
+            ),
+            prefixIcon: Container(
+              margin: EdgeInsets.all(12.w),
+              padding: EdgeInsets.all(8.w),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Icon(
+                FontAwesomeIcons.lock,
+                size: 16.sp,
+                color: AppTheme.primaryColor,
+              ),
+            ),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscurePassword
+                    ? FontAwesomeIcons.eyeSlash
+                    : FontAwesomeIcons.eye,
+                size: 18.sp,
+                color: Colors.grey[600],
+              ),
+              onPressed: () {
+                setState(() {
+                  _obscurePassword = !_obscurePassword;
+                });
+              },
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16.r),
+              borderSide: BorderSide(color: Colors.grey[300]!),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16.r),
+              borderSide: BorderSide(color: Colors.grey[300]!),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16.r),
+              borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: EdgeInsets.symmetric(
+                horizontal: 20.w, vertical: 16.h),
+          ),
+          validator: FormBuilderValidators.compose([
+            FormBuilderValidators.required(errorText: 'Password is required'),
+            FormBuilderValidators.minLength(
+                6, errorText: 'Password must be at least 6 characters'),
+          ]),
+          style: TextStyle(
+            fontSize: 16.sp,
+            color: Colors.black87,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRememberAndForgot() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            Transform.scale(
+              scale: 0.8,
+              child: Checkbox(
+                value: _rememberMe,
+                onChanged: (value) {
+                  setState(() {
+                    _rememberMe = value ?? false;
+                  });
+                },
+                activeColor: AppTheme.primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4.r),
+                ),
+              ),
+            ),
+            Text(
+              'Remember me',
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              PageRouteBuilder(
+                pageBuilder: (context, animation, secondaryAnimation) =>
+                const ForgotPasswordScreen(),
+                transitionsBuilder: (context, animation, secondaryAnimation,
+                    child) {
+                  return SlideTransition(
+                    position: animation.drive(
+                      Tween(begin: const Offset(1.0, 0.0), end: Offset.zero),
+                    ),
+                    child: child,
+                  );
+                },
+              ),
+            );
+          },
+          child: Text(
+            'Forgot Password?',
+            style: TextStyle(
+              color: AppTheme.primaryColor,
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEnhancedLoginButton() {
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, child) {
+        return Container(
+          width: double.infinity,
+          height: 56.h,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: BorderRadius.circular(16.r),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.primaryColor.withOpacity(0.3),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: authProvider.isLoading ? null : _handleLogin,
+              borderRadius: BorderRadius.circular(16.r),
+              child: Container(
+                alignment: Alignment.center,
+                child: authProvider.isLoading
+                    ? SizedBox(
+                  width: 24.w,
+                  height: 24.w,
+                  child: const CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+                    : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      FontAwesomeIcons.arrowRight,
+                      size: 18.sp,
+                      color: Colors.white,
+                    ),
+                    SizedBox(width: 12.w),
+                    Text(
+                      'Sign In',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildEnhancedDivider() {
     return Row(
       children: [
-        Expanded(child: Divider(color: Colors.grey[300])),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'OR',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
+        Expanded(
+          child: Container(
+            height: 1,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.transparent,
+                  Colors.grey[300]!,
+                ],
+              ),
             ),
           ),
         ),
-        Expanded(child: Divider(color: Colors.grey[300])),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(20.r),
+            ),
+            child: Text(
+              'OR',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1,
+              ),
+            ),
+          ),
+        ),
+        Expanded(
+          child: Container(
+            height: 1,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.grey[300]!,
+                  Colors.transparent,
+                ],
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildGoogleSignInButton() {
+  Widget _buildEnhancedGoogleButton() {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, child) {
-        return SizedBox(
+        return Container(
           width: double.infinity,
-          height: 50,
-          child: OutlinedButton.icon(
-            onPressed: authProvider.isLoading ? null : _handleGoogleSignIn,
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: Colors.grey[300]!),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+          height: 56.h,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: Colors.grey[300]!),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-            ),
-            icon: Image.asset(
-              'assets/images/google_logo.png',
-              width: 20,
-              height: 20,
-              errorBuilder: (context, error, stackTrace) {
-                return const Icon(Icons.g_mobiledata, size: 24);
-              },
-            ),
-            label: const Text(
-              'Continue with Google',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: authProvider.isLoading ? null : _handleGoogleSignIn,
+              borderRadius: BorderRadius.circular(16.r),
+              child: Container(
+                alignment: Alignment.center,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Google Logo (using FontAwesome since image might be missing)
+                    Icon(
+                      FontAwesomeIcons.google,
+                      size: 20.sp,
+                      color: const Color(0xFFDB4437),
+                    ),
+                    SizedBox(width: 12.w),
+                    Text(
+                      'Continue with Google',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -461,13 +762,16 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  Widget _buildSignUpButton() {
+  Widget _buildSignUpSection() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
           "Don't have an account? ",
-          style: TextStyle(color: Colors.grey[600]),
+          style: TextStyle(
+            color: Colors.grey[600],
+            fontSize: 15.sp,
+          ),
         ),
         TextButton(
           onPressed: () {
@@ -491,32 +795,69 @@ class _LoginScreenState extends State<LoginScreen>
             'Sign Up',
             style: TextStyle(
               color: AppTheme.primaryColor,
-              fontWeight: FontWeight.bold,
+              fontSize: 15.sp,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ),
       ],
     );
   }
+  //
+  // Widget _buildAdminSection() {
+  //   return ExpansionTile(
+  //     title: Text(
+  //       'Admin Access',
+  //       style: TextStyle(
+  //         fontSize: 14.sp,
+  //         fontWeight: FontWeight.w600,
+  //         color: Colors.grey[600],
+  //       ),
+  //     ),
+  //     // children: [
+  //     //   SizedBox(height: 12.h),
+  //     //   _buildAdminSetupButton(),
+  //     //   SizedBox(height: 12.h),
+  //     //   _buildDirectAdminLoginButton(),
+  //     // ],
+  //   );
+  // }
 
   Widget _buildAdminSetupButton() {
     return Container(
       width: double.infinity,
-      child: OutlinedButton.icon(
-        onPressed: _handleAdminSetup,
-        style: OutlinedButton.styleFrom(
-          side: BorderSide(color: Colors.orange[300]!),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        icon: const Icon(Icons.admin_panel_settings, color: Colors.orange),
-        label: const Text(
-          'Setup Admin Account',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Colors.orange,
+      height: 48.h,
+      decoration: BoxDecoration(
+        color: Colors.orange[50],
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: Colors.orange[200]!),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _handleAdminSetup,
+          borderRadius: BorderRadius.circular(12.r),
+          child: Container(
+            alignment: Alignment.center,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  FontAwesomeIcons.userGear,
+                  size: 16.sp,
+                  color: Colors.orange[600],
+                ),
+                SizedBox(width: 8.w),
+                Text(
+                  'Setup Admin Account',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.orange[600],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -526,21 +867,38 @@ class _LoginScreenState extends State<LoginScreen>
   Widget _buildDirectAdminLoginButton() {
     return Container(
       width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: _handleDirectAdminLogin,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.green,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        icon: const Icon(Icons.login, size: 16),
-        label: const Text(
-          'Direct Admin Login',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
+      height: 48.h,
+      decoration: BoxDecoration(
+        color: Colors.green[50],
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: Colors.green[200]!),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _handleDirectAdminLogin,
+          borderRadius: BorderRadius.circular(12.r),
+          child: Container(
+            alignment: Alignment.center,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  FontAwesomeIcons.rightToBracket,
+                  size: 16.sp,
+                  color: Colors.green[600],
+                ),
+                SizedBox(width: 8.w),
+                Text(
+                  'Direct Admin Login',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.green[600],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -596,16 +954,32 @@ class _LoginScreenState extends State<LoginScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Login Failed'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+        title: Row(
           children: [
-            Text('Admin login failed. This might be because:'),
-            SizedBox(height: 8),
-            Text('• Password needs to be reset'),
-            Text('• Account needs verification'),
-            SizedBox(height: 16),
-            Text('Would you like to reset the password?'),
+            Icon(
+              FontAwesomeIcons.triangleExclamation,
+              color: Colors.orange,
+              size: 20.sp,
+            ),
+            SizedBox(width: 12.w),
+            const Text('Login Failed'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Admin login failed. This might be because:'),
+            SizedBox(height: 8.h),
+            Text('• Password needs to be reset',
+                style: TextStyle(fontSize: 14.sp)),
+            Text('• Account needs verification',
+                style: TextStyle(fontSize: 14.sp)),
+            SizedBox(height: 16.h),
+            const Text('Would you like to reset the password?'),
           ],
         ),
         actions: [
@@ -621,6 +995,9 @@ class _LoginScreenState extends State<LoginScreen>
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primaryColor,
               foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
             ),
             child: const Text('Reset Password'),
           ),
@@ -637,15 +1014,19 @@ class _LoginScreenState extends State<LoginScreen>
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const AlertDialog(
-          content: Row(
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(width: 16),
-              Text('Setting up admin account...'),
-            ],
-          ),
-        ),
+        builder: (context) =>
+            AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16.r),
+              ),
+              content: Row(
+                children: [
+                  const CircularProgressIndicator(),
+                  SizedBox(width: 16.w),
+                  const Text('Setting up admin account...'),
+                ],
+              ),
+            ),
       );
 
       // Create admin account
@@ -669,12 +1050,8 @@ class _LoginScreenState extends State<LoginScreen>
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to setup admin account. Please try again.'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          _showErrorSnackBar(
+              'Failed to setup admin account. Please try again.');
         }
       }
     } catch (e) {
@@ -684,12 +1061,7 @@ class _LoginScreenState extends State<LoginScreen>
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showErrorSnackBar('Error: $e');
       }
     }
   }
@@ -700,17 +1072,45 @@ class _LoginScreenState extends State<LoginScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Admin Account Ready'),
-        content: const Column(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+        title: Row(
+          children: [
+            Icon(
+              FontAwesomeIcons.circleCheck,
+              color: Colors.green,
+              size: 20.sp,
+            ),
+            SizedBox(width: 12.w),
+            const Text('Admin Account Ready'),
+          ],
+        ),
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Your admin account is ready!'),
-            SizedBox(height: 16),
-            Text('Email: rathin007008@gmail.com'),
-            Text('Password: r@THIN007008'),
-            SizedBox(height: 16),
-            Text('The login form has been pre-filled. Tap "Sign In" to access the admin panel.'),
+            const Text('Your admin account is ready!'),
+            SizedBox(height: 16.h),
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Email: ${AdminSetup.adminEmail}',
+                      style: TextStyle(fontSize: 14.sp)),
+                  Text('Password: ${AdminSetup.adminPassword}',
+                      style: TextStyle(fontSize: 14.sp)),
+                ],
+              ),
+            ),
+            SizedBox(height: 16.h),
+            const Text(
+                'The login form has been pre-filled. Tap "Sign In" to access the admin panel.'),
           ],
         ),
         actions: [
@@ -731,6 +1131,9 @@ class _LoginScreenState extends State<LoginScreen>
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primaryColor,
               foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
             ),
             child: const Text('Login Now'),
           ),
@@ -745,21 +1148,12 @@ class _LoginScreenState extends State<LoginScreen>
 
       if (!mounted) return; // Check before showing SnackBar
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password reset email sent to rathin007008@gmail.com'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      _showSuccessSnackBar(
+          'Password reset email sent to ${AdminSetup.adminEmail}');
     } catch (e) {
       if (!mounted) return; // Check before showing SnackBar
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to send reset email: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showErrorSnackBar('Failed to send reset email: $e');
     }
   }
 
@@ -819,12 +1213,48 @@ class _LoginScreenState extends State<LoginScreen>
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
+        content: Row(
+          children: [
+            Icon(
+              FontAwesomeIcons.triangleExclamation,
+              color: Colors.white,
+              size: 16.sp,
+            ),
+            SizedBox(width: 12.w),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Colors.red[600],
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12.r),
         ),
+        margin: EdgeInsets.all(16.w),
+      ),
+    );
+  }
+
+  void _showSuccessSnackBar(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              FontAwesomeIcons.circleCheck,
+              color: Colors.white,
+              size: 16.sp,
+            ),
+            SizedBox(width: 12.w),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Colors.green[600],
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        margin: EdgeInsets.all(16.w),
       ),
     );
   }
