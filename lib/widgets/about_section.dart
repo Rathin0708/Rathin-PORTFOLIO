@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../utils/constants.dart';
 import '../utils/responsive.dart';
+import '../widgets/enhanced_resume_widget.dart';
 
 class AboutSection extends StatelessWidget {
   const AboutSection({super.key});
@@ -50,8 +51,6 @@ class AboutSection extends StatelessWidget {
                   final location = profileData?['location'] ??
                       AppConstants.location;
                   final profileImage = profileData?['profileImage'] ?? '';
-                  final resumeUrl = profileData?['resumeUrl'] ??
-                      AppConstants.resumeUrl;
                   final bio = aboutData?['bio'] ?? AppConstants.bio;
                   final skills = aboutData?['skills'] != null
                       ? List<String>.from(aboutData!['skills'])
@@ -66,8 +65,7 @@ class AboutSection extends StatelessWidget {
                         location,
                         profileImage,
                         bio,
-                        skills,
-                        resumeUrl),
+                        skills),
                     desktop: _buildDesktopLayout(
                         context,
                         name,
@@ -75,8 +73,7 @@ class AboutSection extends StatelessWidget {
                         location,
                         profileImage,
                         bio,
-                        skills,
-                        resumeUrl),
+                        skills),
                   );
                 },
               );
@@ -120,8 +117,7 @@ class AboutSection extends StatelessWidget {
   }
 
   Widget _buildMobileLayout(BuildContext context, String name, String tagline,
-      String location, String profileImage, String bio, List<String> skills,
-      String resumeUrl) {
+      String location, String profileImage, String bio, List<String> skills) {
     return AnimationLimiter(
       child: Column(
         children: AnimationConfiguration.toStaggeredList(
@@ -136,7 +132,8 @@ class AboutSection extends StatelessWidget {
             const SizedBox(height: AppConstants.paddingLarge),
             _buildSkillsSection(context, skills),
             const SizedBox(height: AppConstants.paddingLarge),
-            _buildResumeButton(context, resumeUrl),
+            // Use the new enhanced resume widget
+            const EnhancedResumeWidget(),
           ],
         ),
       ),
@@ -144,32 +141,31 @@ class AboutSection extends StatelessWidget {
   }
 
   Widget _buildDesktopLayout(BuildContext context, String name, String tagline,
-      String location, String profileImage, String bio, List<String> skills,
-      String resumeUrl) {
+      String location, String profileImage, String bio, List<String> skills) {
     return AnimationLimiter(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
         children: [
-          Expanded(
-            flex: 2,
-            child: AnimationConfiguration.staggeredList(
-              position: 0,
-              duration: AppConstants.mediumAnimation,
-              child: SlideAnimation(
-                horizontalOffset: -50.0,
-                child: FadeInAnimation(
-                  child: _buildProfileCard(
-                      context, name, tagline, location, profileImage, bio),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 2,
+                child: AnimationConfiguration.staggeredList(
+                  position: 0,
+                  duration: AppConstants.mediumAnimation,
+                  child: SlideAnimation(
+                    horizontalOffset: -50.0,
+                    child: FadeInAnimation(
+                      child: _buildProfileCard(
+                          context, name, tagline, location, profileImage, bio),
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          const SizedBox(width: AppConstants.paddingXLarge),
-          Expanded(
-            flex: 3,
-            child: Column(
-              children: [
-                AnimationConfiguration.staggeredList(
+              const SizedBox(width: AppConstants.paddingXLarge),
+              Expanded(
+                flex: 3,
+                child: AnimationConfiguration.staggeredList(
                   position: 1,
                   duration: AppConstants.mediumAnimation,
                   child: SlideAnimation(
@@ -179,18 +175,19 @@ class AboutSection extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: AppConstants.paddingLarge),
-                AnimationConfiguration.staggeredList(
-                  position: 2,
-                  duration: AppConstants.mediumAnimation,
-                  child: SlideAnimation(
-                    horizontalOffset: 50.0,
-                    child: FadeInAnimation(
-                      child: _buildResumeButton(context, resumeUrl),
-                    ),
-                  ),
-                ),
-              ],
+              ),
+            ],
+          ),
+          const SizedBox(height: AppConstants.paddingLarge),
+          // Use the new enhanced resume widget (full width)
+          AnimationConfiguration.staggeredList(
+            position: 2,
+            duration: AppConstants.mediumAnimation,
+            child: SlideAnimation(
+              verticalOffset: 50.0,
+              child: FadeInAnimation(
+                child: const EnhancedResumeWidget(),
+              ),
             ),
           ),
         ],
@@ -410,28 +407,5 @@ class AboutSection extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  Widget _buildResumeButton(BuildContext context, String resumeUrl) {
-    return SizedBox(
-      width: Responsive.isMobile(context) ? double.infinity : 200,
-      child: ElevatedButton.icon(
-        onPressed: () => _downloadResume(resumeUrl),
-        icon: const Icon(Icons.download),
-        label: const Text('Download Resume'),
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(
-            vertical: AppConstants.paddingMedium,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _downloadResume(String resumeUrl) async {
-    final Uri url = Uri.parse(resumeUrl);
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-    }
   }
 }
