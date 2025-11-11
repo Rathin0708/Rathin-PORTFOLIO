@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "mine-fca38"
-  }
+    "default": "mine-fca38",
+    "Rathin": "mine-fca38"
+  },
+  "targets": {},
+  "etags": {}
 }

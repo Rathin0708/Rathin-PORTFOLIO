@@ -38,6 +38,21 @@
       }
     }
   },
+  "hosting": {
+    "site": "rathin-portfolio",
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
   "functions": {
     "source": "functions",
     "runtime": "nodejs18"
