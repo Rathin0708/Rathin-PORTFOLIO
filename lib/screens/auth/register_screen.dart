@@ -254,7 +254,13 @@ class _RegisterScreenState extends State<RegisterScreen>
     return SafeArea(
       child: Center(
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(24.w),
+          padding: EdgeInsets.symmetric(
+            horizontal: MediaQuery
+                .of(context)
+                .size
+                .width > 800 ? 40.w : 24.w,
+            vertical: 24.h,
+          ),
           child: AnimatedBuilder(
             animation: _animationController,
             builder: (context, child) {
@@ -276,29 +282,77 @@ class _RegisterScreenState extends State<RegisterScreen>
   }
 
   Widget _buildFormContent() {
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final isTablet = screenWidth > 768 &&
+        screenWidth <= 1200; // Changed breakpoint from 600 to 768
+    final isDesktop = screenWidth > 1200;
+    final isMobile = screenWidth <=
+        768; // Changed from 600 to 768 - now mobile gets tablet styling
+    final isSmallMobile = screenWidth <= 400;
+    final isWebMobile = kIsWeb &&
+        screenWidth <= 600; // Keep web mobile detection separate
+
     return Container(
       constraints: BoxConstraints(
-        maxWidth: MediaQuery
-            .of(context)
-            .size
-            .width > 600 ? 450.w : 400.w, // Better web sizing
-        minWidth: 300.w,
+        maxWidth: isDesktop
+            ? 520.w
+            : isTablet
+            ? 540.w // Increased tablet width from 480w to 540w - much bigger
+            : isWebMobile
+            ? 450.0
+            : isSmallMobile
+            ? screenWidth * 0.95
+            : 500.w, // Mobile now gets 500w (old tablet size)
+        minWidth: isWebMobile
+            ? 420.0
+            : isSmallMobile
+            ? screenWidth * 0.9
+            : 420.w, // Increased mobile minimum
       ),
-      margin: EdgeInsets.symmetric(horizontal: 20.w),
-      padding: EdgeInsets.all(32.w),
+      margin: EdgeInsets.symmetric(
+        horizontal: isWebMobile
+            ? 20.0
+            : isMobile
+            ? 20.w // Increased mobile margins for more spacious look
+            : isTablet
+            ? 50.w // Increased tablet margins
+            : 20.w,
+      ),
+      padding: EdgeInsets.all(
+        isWebMobile
+            ? 32.0
+            : isMobile
+            ? 36.w // Increased mobile padding (old tablet size)
+            : isTablet
+            ? 48.w // Much bigger tablet padding
+            : 32.w,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24.r),
+        borderRadius: BorderRadius.circular(
+          isWebMobile
+              ? 20.0
+              : isMobile
+              ? 24.r // Mobile gets old tablet radius
+              : isTablet
+              ? 32.r // Bigger tablet radius
+              : 24.r,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08), // Reduced shadow for web
-            blurRadius: 25,
-            offset: const Offset(0, 12),
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: isWebMobile ? 25.0 : isMobile ? 30 : isTablet ? 40 : 25,
+            // Enhanced shadows
+            offset: Offset(
+                0, isWebMobile ? 12.0 : isMobile ? 15 : isTablet ? 20 : 12),
             spreadRadius: 0,
           ),
           BoxShadow(
             color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
+            blurRadius: isWebMobile ? 10.0 : isMobile ? 12 : isTablet ? 15 : 12,
             offset: const Offset(0, 4),
             spreadRadius: 0,
           ),
@@ -313,23 +367,49 @@ class _RegisterScreenState extends State<RegisterScreen>
               duration: Duration(milliseconds: kIsWeb ? 600 : 400),
               child: _buildEnhancedLogo(),
             ),
-            SizedBox(height: 40.h),
+            SizedBox(height: isWebMobile ? 32.0 : isMobile ? 44.h : isTablet
+                ? 56.h
+                : 40.h), // Increased spacing
             _buildNameField(),
-            SizedBox(height: 20.h),
+            SizedBox(height: isWebMobile ? 18.0 : isMobile ? 22.h : isTablet
+                ? 28.h
+                : 20.h),
+            // Increased spacing
             _buildEmailField(),
-            SizedBox(height: 20.h),
+            SizedBox(height: isWebMobile ? 18.0 : isMobile ? 22.h : isTablet
+                ? 28.h
+                : 20.h),
+            // Increased spacing
             _buildPasswordField(),
-            SizedBox(height: 16.h),
+            SizedBox(height: isWebMobile ? 14.0 : isMobile ? 18.h : isTablet
+                ? 24.h
+                : 16.h),
+            // Increased spacing
             _buildConfirmPasswordField(),
-            SizedBox(height: 20.h),
+            SizedBox(height: isWebMobile ? 18.0 : isMobile ? 22.h : isTablet
+                ? 28.h
+                : 20.h),
+            // Increased spacing
             _buildTermsCheckbox(),
-            SizedBox(height: 32.h),
-            _buildRegisterButton(),
-            SizedBox(height: 24.h),
+            SizedBox(height: isWebMobile ? 28.0 : isMobile ? 36.h : isTablet
+                ? 48.h
+                : 32.h),
+            // Increased spacing
+            _buildEnhancedRegisterButton(),
+            SizedBox(height: isWebMobile ? 20.0 : isMobile ? 26.h : isTablet
+                ? 36.h
+                : 24.h),
+            // Increased spacing
             _buildEnhancedDivider(),
-            SizedBox(height: 24.h),
+            SizedBox(height: isWebMobile ? 20.0 : isMobile ? 26.h : isTablet
+                ? 36.h
+                : 24.h),
+            // Increased spacing
             _buildEnhancedGoogleButton(),
-            SizedBox(height: 32.h),
+            SizedBox(height: isWebMobile ? 28.0 : isMobile ? 36.h : isTablet
+                ? 48.h
+                : 32.h),
+            // Increased spacing
             _buildSignInSection(),
           ],
         ),
@@ -338,6 +418,16 @@ class _RegisterScreenState extends State<RegisterScreen>
   }
 
   Widget _buildEnhancedLogo() {
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final isTablet = screenWidth > 768 &&
+        screenWidth <= 1200; // Updated breakpoint
+    final isMobile = screenWidth <= 768; // Updated breakpoint
+    final isSmallMobile = screenWidth <= 400;
+    final isWebMobile = kIsWeb && screenWidth <= 600;
+
     return AnimatedBuilder(
       animation: _pulseAnimation,
       builder: (context, child) {
@@ -346,8 +436,24 @@ class _RegisterScreenState extends State<RegisterScreen>
           child: Column(
             children: [
               Container(
-                width: 90.w,
-                height: 90.w,
+                width: isWebMobile
+                    ? 90.0
+                    : isSmallMobile
+                    ? 75.w
+                    : isMobile
+                    ? 105.w // Mobile gets bigger logo (old tablet size)
+                    : isTablet
+                    ? 125.w // Much bigger tablet logo
+                    : 90.w,
+                height: isWebMobile
+                    ? 90.0
+                    : isSmallMobile
+                    ? 75.w
+                    : isMobile
+                    ? 105.w // Mobile gets bigger logo
+                    : isTablet
+                    ? 125.w // Much bigger tablet logo
+                    : 90.w,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [
@@ -361,33 +467,90 @@ class _RegisterScreenState extends State<RegisterScreen>
                   boxShadow: [
                     BoxShadow(
                       color: AppTheme.accentColor.withOpacity(0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
+                      blurRadius: isWebMobile
+                          ? 20.0
+                          : isSmallMobile
+                          ? 15
+                          : isMobile
+                          ? 28 // Mobile gets enhanced shadow
+                          : isTablet
+                          ? 35 // Much bigger tablet shadow
+                          : 20,
+                      offset: Offset(0, isWebMobile
+                          ? 8.0
+                          : isSmallMobile
+                          ? 5
+                          : isMobile
+                          ? 12 // Enhanced mobile shadow offset
+                          : isTablet
+                          ? 16 // Much bigger tablet shadow offset
+                          : 8),
                     ),
                   ],
                 ),
                 child: Icon(
                   FontAwesomeIcons.userPlus,
-                  size: 36.sp,
+                  size: isWebMobile
+                      ? 36.0
+                      : isSmallMobile
+                      ? 28.sp
+                      : isMobile
+                      ? 42.sp // Mobile gets bigger icon (old tablet size)
+                      : isTablet
+                      ? 52.sp // Much bigger tablet icon
+                      : 36.sp,
                   color: Colors.white,
                 ),
               ),
-              SizedBox(height: 20.h),
+              SizedBox(height: isWebMobile
+                  ? 24.0
+                  : isSmallMobile
+                  ? 16.h
+                  : isMobile
+                  ? 26.h // Mobile gets bigger spacing (old tablet size)
+                  : isTablet
+                  ? 34.h // Much bigger tablet spacing
+                  : 20.h),
               Text(
                 'Create Account ✨',
                 style: AppTheme.headingStyle.copyWith(
-                  fontSize: 28.sp,
+                  fontSize: isWebMobile
+                      ? 28.0
+                      : isSmallMobile
+                      ? 22.sp
+                      : isMobile
+                      ? 30.sp // Mobile gets bigger font (old tablet size)
+                      : isTablet
+                      ? 38.sp // Much bigger tablet font
+                      : 28.sp,
                   color: AppTheme.primaryColor,
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              SizedBox(height: 8.h),
+              SizedBox(height: isWebMobile
+                  ? 10.0
+                  : isSmallMobile
+                  ? 6.h
+                  : isMobile
+                  ? 12.h // Mobile gets bigger spacing (old tablet size)
+                  : isTablet
+                  ? 16.h // Much bigger tablet spacing
+                  : 8.h),
               Text(
                 'Join our community today',
                 style: AppTheme.bodyStyle.copyWith(
                   color: Colors.grey[600],
-                  fontSize: 16.sp,
+                  fontSize: isWebMobile
+                      ? 16.0
+                      : isSmallMobile
+                      ? 14.sp
+                      : isMobile
+                      ? 17.sp // Mobile gets bigger font (old tablet size)
+                      : isTablet
+                      ? 21.sp // Much bigger tablet font
+                      : 16.sp,
                 ),
+                textAlign: TextAlign.center,
               ),
             ],
           ),
@@ -397,68 +560,105 @@ class _RegisterScreenState extends State<RegisterScreen>
   }
 
   Widget _buildNameField() {
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final isTablet = screenWidth > 768 &&
+        screenWidth <= 1200; // Updated breakpoint
+    final isMobile = screenWidth <= 768; // Updated breakpoint
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Full Name',
           style: TextStyle(
-            fontSize: 14.sp,
+            fontSize: isMobile ? 15.sp : isTablet ? 16.sp : 14.sp,
             fontWeight: FontWeight.w600,
             color: Colors.grey[700],
           ),
         ),
-        SizedBox(height: 8.h),
-        FormBuilderTextField(
-          name: 'name',
-          decoration: InputDecoration(
-            hintText: 'Enter your full name',
-            hintStyle: TextStyle(
-              color: Colors.grey[400],
-              fontSize: 16.sp,
-            ),
-            prefixIcon: Container(
-              margin: EdgeInsets.all(12.w),
-              padding: EdgeInsets.all(8.w),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8.r),
+        SizedBox(height: isMobile ? 10.h : 8.h),
+        Container(
+          height: isMobile ? 52.h : isTablet ? 60.h : 56.h,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(
+                isMobile ? 12.r : isTablet ? 16.r : 14.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: isMobile ? 12 : isTablet ? 20 : 15,
+                offset: const Offset(0, 4),
               ),
-              child: Icon(
-                FontAwesomeIcons.user,
-                size: 16.sp,
-                color: AppTheme.primaryColor,
-              ),
+            ],
+            border: Border.all(
+              color: Colors.grey[200]!,
+              width: 1,
             ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16.r),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16.r),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16.r),
-              borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
-            ),
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: EdgeInsets.symmetric(
-                horizontal: 20.w, vertical: 16.h),
           ),
-          validator: FormBuilderValidators.compose([
-            FormBuilderValidators.required(errorText: 'Full name is required'),
-            FormBuilderValidators.minLength(
-                2, errorText: 'Name must be at least 2 characters'),
-            FormBuilderValidators.maxLength(
-                50, errorText: 'Name must be less than 50 characters'),
-          ]),
-          textCapitalization: TextCapitalization.words,
-          style: TextStyle(
-            fontSize: 16.sp,
-            color: Colors.black87,
-            fontWeight: FontWeight.w500,
+          child: FormBuilderTextField(
+            name: 'name',
+            style: TextStyle(
+              fontSize: isMobile ? 16.sp : isTablet ? 18.sp : 16.sp,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
+            decoration: InputDecoration(
+              hintText: 'Enter your full name',
+              hintStyle: TextStyle(
+                color: Colors.grey[400],
+                fontSize: isMobile ? 16.sp : isTablet ? 18.sp : 16.sp,
+                fontWeight: FontWeight.w400,
+              ),
+              prefixIcon: Container(
+                margin: EdgeInsets.all(
+                    isMobile ? 10.w : isTablet ? 14.w : 12.w),
+                padding: EdgeInsets.all(isMobile ? 6.w : isTablet ? 10.w : 8.w),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(
+                      isMobile ? 6.r : isTablet ? 10.r : 8.r),
+                ),
+                child: Icon(
+                  FontAwesomeIcons.user,
+                  size: isMobile ? 14.sp : isTablet ? 18.sp : 16.sp,
+                  color: AppTheme.primaryColor,
+                ),
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(
+                    isMobile ? 12.r : isTablet ? 16.r : 14.r),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(
+                    isMobile ? 12.r : isTablet ? 16.r : 14.r),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(
+                    isMobile ? 12.r : isTablet ? 16.r : 14.r),
+                borderSide: BorderSide(
+                  color: Theme
+                      .of(context)
+                      .primaryColor,
+                  width: 2,
+                ),
+              ),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 16.w : isTablet ? 24.w : 20.w,
+                vertical: isMobile ? 14.h : isTablet ? 20.h : 16.h,
+              ),
+              filled: true,
+              fillColor: Colors.white,
+            ),
+            validator: FormBuilderValidators.compose([
+              FormBuilderValidators.required(errorText: 'Name is required'),
+              FormBuilderValidators.minLength(
+                  2, errorText: 'Name must be at least 2 characters'),
+            ]),
           ),
         ),
       ],
@@ -466,66 +666,106 @@ class _RegisterScreenState extends State<RegisterScreen>
   }
 
   Widget _buildEmailField() {
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final isTablet = screenWidth > 768 &&
+        screenWidth <= 1200; // Updated breakpoint
+    final isMobile = screenWidth <= 768; // Updated breakpoint
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Email Address',
           style: TextStyle(
-            fontSize: 14.sp,
+            fontSize: isMobile ? 15.sp : isTablet ? 16.sp : 14.sp,
             fontWeight: FontWeight.w600,
             color: Colors.grey[700],
           ),
         ),
-        SizedBox(height: 8.h),
-        FormBuilderTextField(
-          name: 'email',
-          decoration: InputDecoration(
-            hintText: 'Enter your email',
-            hintStyle: TextStyle(
-              color: Colors.grey[400],
-              fontSize: 16.sp,
-            ),
-            prefixIcon: Container(
-              margin: EdgeInsets.all(12.w),
-              padding: EdgeInsets.all(8.w),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8.r),
+        SizedBox(height: isMobile ? 10.h : 8.h),
+        Container(
+          height: isMobile ? 52.h : isTablet ? 60.h : 56.h,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(
+                isMobile ? 12.r : isTablet ? 16.r : 14.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: isMobile ? 12 : isTablet ? 20 : 15,
+                offset: const Offset(0, 4),
               ),
-              child: Icon(
-                FontAwesomeIcons.envelope,
-                size: 16.sp,
-                color: AppTheme.primaryColor,
-              ),
+            ],
+            border: Border.all(
+              color: Colors.grey[200]!,
+              width: 1,
             ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16.r),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16.r),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16.r),
-              borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
-            ),
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: EdgeInsets.symmetric(
-                horizontal: 20.w, vertical: 16.h),
           ),
-          validator: FormBuilderValidators.compose([
-            FormBuilderValidators.required(errorText: 'Email is required'),
-            FormBuilderValidators.email(
-                errorText: 'Enter a valid email address'),
-          ]),
-          keyboardType: TextInputType.emailAddress,
-          style: TextStyle(
-            fontSize: 16.sp,
-            color: Colors.black87,
-            fontWeight: FontWeight.w500,
+          child: FormBuilderTextField(
+            name: 'email',
+            keyboardType: TextInputType.emailAddress,
+            style: TextStyle(
+              fontSize: isMobile ? 16.sp : isTablet ? 18.sp : 16.sp,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
+            decoration: InputDecoration(
+              hintText: 'Enter your email',
+              hintStyle: TextStyle(
+                color: Colors.grey[400],
+                fontSize: isMobile ? 16.sp : isTablet ? 18.sp : 16.sp,
+                fontWeight: FontWeight.w400,
+              ),
+              prefixIcon: Container(
+                margin: EdgeInsets.all(
+                    isMobile ? 10.w : isTablet ? 14.w : 12.w),
+                padding: EdgeInsets.all(isMobile ? 6.w : isTablet ? 10.w : 8.w),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(
+                      isMobile ? 6.r : isTablet ? 10.r : 8.r),
+                ),
+                child: Icon(
+                  FontAwesomeIcons.envelope,
+                  size: isMobile ? 14.sp : isTablet ? 18.sp : 16.sp,
+                  color: AppTheme.primaryColor,
+                ),
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(
+                    isMobile ? 12.r : isTablet ? 16.r : 14.r),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(
+                    isMobile ? 12.r : isTablet ? 16.r : 14.r),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(
+                    isMobile ? 12.r : isTablet ? 16.r : 14.r),
+                borderSide: BorderSide(
+                  color: Theme
+                      .of(context)
+                      .primaryColor,
+                  width: 2,
+                ),
+              ),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 16.w : isTablet ? 24.w : 20.w,
+                vertical: isMobile ? 14.h : isTablet ? 20.h : 16.h,
+              ),
+              filled: true,
+              fillColor: Colors.white,
+            ),
+            validator: FormBuilderValidators.compose([
+              FormBuilderValidators.required(errorText: 'Email is required'),
+              FormBuilderValidators.email(
+                  errorText: 'Please enter a valid email'),
+            ]),
           ),
         ),
       ],
@@ -533,101 +773,115 @@ class _RegisterScreenState extends State<RegisterScreen>
   }
 
   Widget _buildPasswordField() {
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final isTablet = screenWidth > 768 &&
+        screenWidth <= 1200; // Updated breakpoint
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Password',
           style: TextStyle(
-            fontSize: 14.sp,
+            fontSize: isTablet ? 16.sp : 14.sp,
             fontWeight: FontWeight.w600,
             color: Colors.grey[700],
           ),
         ),
         SizedBox(height: 8.h),
-        FormBuilderTextField(
-          name: 'password',
-          obscureText: _obscurePassword,
-          onChanged: (value) => _checkPasswordStrength(value ?? ''),
-          decoration: InputDecoration(
-            hintText: 'Create a strong password',
-            hintStyle: TextStyle(
-              color: Colors.grey[400],
-              fontSize: 16.sp,
-            ),
-            prefixIcon: Container(
-              margin: EdgeInsets.all(12.w),
-              padding: EdgeInsets.all(8.w),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8.r),
+        Container(
+          height: isTablet ? 60.h : 56.h,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(isTablet ? 16.r : 14.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: isTablet ? 20 : 15,
+                offset: const Offset(0, 8),
               ),
-              child: Icon(
-                FontAwesomeIcons.lock,
-                size: 16.sp,
-                color: AppTheme.primaryColor,
-              ),
-            ),
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscurePassword
-                    ? FontAwesomeIcons.eyeSlash
-                    : FontAwesomeIcons.eye,
-                size: 18.sp,
-                color: Colors.grey[600],
-              ),
-              onPressed: () {
-                setState(() {
-                  _obscurePassword = !_obscurePassword;
-                });
-              },
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16.r),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16.r),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16.r),
-              borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
-            ),
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: EdgeInsets.symmetric(
-                horizontal: 20.w, vertical: 16.h),
+            ],
           ),
-          validator: FormBuilderValidators.compose([
-            FormBuilderValidators.required(errorText: 'Password is required'),
-            FormBuilderValidators.minLength(
-                8, errorText: 'Password must be at least 8 characters'),
-                (value) {
-              if (value == null || value.isEmpty) return null;
+          child: FormBuilderTextField(
+            name: 'password',
+            obscureText: _obscurePassword,
+            onChanged: (value) => _checkPasswordStrength(value ?? ''),
+            style: TextStyle(
+              fontSize: isTablet ? 18.sp : 16.sp,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
+            decoration: InputDecoration(
+              hintText: 'Create a strong password',
+              hintStyle: TextStyle(
+                color: Colors.grey[400],
+                fontSize: isTablet ? 18.sp : 16.sp,
+                fontWeight: FontWeight.w400,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(isTablet ? 16.r : 14.r),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(isTablet ? 16.r : 14.r),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(isTablet ? 16.r : 14.r),
+                borderSide: BorderSide(
+                  color: Theme
+                      .of(context)
+                      .primaryColor,
+                  width: 2,
+                ),
+              ),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: isTablet ? 24.w : 20.w,
+                vertical: isTablet ? 20.h : 16.h,
+              ),
+              filled: true,
+              fillColor: Colors.white,
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                  color: Colors.grey[600],
+                  size: isTablet ? 24 : 20,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _obscurePassword = !_obscurePassword;
+                  });
+                },
+              ),
+            ),
+            validator: FormBuilderValidators.compose([
+              FormBuilderValidators.required(errorText: 'Password is required'),
+              FormBuilderValidators.minLength(
+                  8, errorText: 'Password must be at least 8 characters'),
+                  (value) {
+                if (value == null || value.isEmpty) return null;
 
-              // Check for at least one lowercase letter
-              if (!RegExp(r'[a-z]').hasMatch(value)) {
-                return 'Password must contain at least one lowercase letter';
-              }
+                // Check for at least one lowercase letter
+                if (!RegExp(r'[a-z]').hasMatch(value)) {
+                  return 'Password must contain at least one lowercase letter';
+                }
 
-              // Check for at least one uppercase letter  
-              if (!RegExp(r'[A-Z]').hasMatch(value)) {
-                return 'Password must contain at least one uppercase letter';
-              }
+                // Check for at least one uppercase letter  
+                if (!RegExp(r'[A-Z]').hasMatch(value)) {
+                  return 'Password must contain at least one uppercase letter';
+                }
 
-              // Check for at least one digit
-              if (!RegExp(r'[0-9]').hasMatch(value)) {
-                return 'Password must contain at least one number';
-              }
+                // Check for at least one digit
+                if (!RegExp(r'[0-9]').hasMatch(value)) {
+                  return 'Password must contain at least one number';
+                }
 
-              return null;
-            },
-          ]),
-          style: TextStyle(
-            fontSize: 16.sp,
-            color: Colors.black87,
-            fontWeight: FontWeight.w500,
+                return null;
+              },
+            ]),
           ),
         ),
         SizedBox(height: 8.h),
@@ -674,86 +928,102 @@ class _RegisterScreenState extends State<RegisterScreen>
   }
 
   Widget _buildConfirmPasswordField() {
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final isTablet = screenWidth > 768 &&
+        screenWidth <= 1200; // Updated breakpoint
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Confirm Password',
           style: TextStyle(
-            fontSize: 14.sp,
+            fontSize: isTablet ? 16.sp : 14.sp,
             fontWeight: FontWeight.w600,
             color: Colors.grey[700],
           ),
         ),
         SizedBox(height: 8.h),
-        FormBuilderTextField(
-          name: 'confirmPassword',
-          obscureText: _obscureConfirmPassword,
-          decoration: InputDecoration(
-            hintText: 'Confirm your password',
-            hintStyle: TextStyle(
-              color: Colors.grey[400],
-              fontSize: 16.sp,
-            ),
-            prefixIcon: Container(
-              margin: EdgeInsets.all(12.w),
-              padding: EdgeInsets.all(8.w),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8.r),
+        Container(
+          height: isTablet ? 60.h : 56.h,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(isTablet ? 16.r : 14.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: isTablet ? 20 : 15,
+                offset: const Offset(0, 8),
               ),
-              child: Icon(
-                FontAwesomeIcons.lock,
-                size: 16.sp,
-                color: AppTheme.primaryColor,
-              ),
-            ),
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscureConfirmPassword
-                    ? FontAwesomeIcons.eyeSlash
-                    : FontAwesomeIcons.eye,
-                size: 18.sp,
-                color: Colors.grey[600],
-              ),
-              onPressed: () {
-                setState(() {
-                  _obscureConfirmPassword = !_obscureConfirmPassword;
-                });
-              },
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16.r),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16.r),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16.r),
-              borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
-            ),
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: EdgeInsets.symmetric(
-                horizontal: 20.w, vertical: 16.h),
+            ],
           ),
-          validator: FormBuilderValidators.compose([
-            FormBuilderValidators.required(
-                errorText: 'Please confirm your password'),
-                (value) {
-              final password = _formKey.currentState?.fields['password']?.value;
-              if (value != password) {
-                return 'Passwords do not match';
-              }
-              return null;
-            },
-          ]),
-          style: TextStyle(
-            fontSize: 16.sp,
-            color: Colors.black87,
-            fontWeight: FontWeight.w500,
+          child: FormBuilderTextField(
+            name: 'confirmPassword',
+            obscureText: _obscureConfirmPassword,
+            style: TextStyle(
+              fontSize: isTablet ? 18.sp : 16.sp,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
+            decoration: InputDecoration(
+              hintText: 'Confirm your password',
+              hintStyle: TextStyle(
+                color: Colors.grey[400],
+                fontSize: isTablet ? 18.sp : 16.sp,
+                fontWeight: FontWeight.w400,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(isTablet ? 16.r : 14.r),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(isTablet ? 16.r : 14.r),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(isTablet ? 16.r : 14.r),
+                borderSide: BorderSide(
+                  color: Theme
+                      .of(context)
+                      .primaryColor,
+                  width: 2,
+                ),
+              ),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: isTablet ? 24.w : 20.w,
+                vertical: isTablet ? 20.h : 16.h,
+              ),
+              filled: true,
+              fillColor: Colors.white,
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _obscureConfirmPassword ? Icons.visibility : Icons
+                      .visibility_off,
+                  color: Colors.grey[600],
+                  size: isTablet ? 24 : 20,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _obscureConfirmPassword = !_obscureConfirmPassword;
+                  });
+                },
+              ),
+            ),
+            validator: FormBuilderValidators.compose([
+              FormBuilderValidators.required(
+                  errorText: 'Please confirm your password'),
+                  (value) {
+                final password = _formKey.currentState?.fields['password']
+                    ?.value;
+                if (value != password) {
+                  return 'Passwords do not match';
+                }
+                return null;
+              },
+            ]),
           ),
         ),
       ],
@@ -761,132 +1031,152 @@ class _RegisterScreenState extends State<RegisterScreen>
   }
 
   Widget _buildTermsCheckbox() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Transform.scale(
-          scale: 0.9,
-          child: Checkbox(
-            value: _acceptTerms,
-            onChanged: (value) {
-              setState(() {
-                _acceptTerms = value ?? false;
-              });
-            },
-            activeColor: AppTheme.primaryColor,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(4.r),
-            ),
-          ),
-        ),
-        SizedBox(width: 4.w),
-        Expanded(
-          child: GestureDetector(
-            onTap: () {
-              setState(() {
-                _acceptTerms = !_acceptTerms;
-              });
-            },
-            child: RichText(
-              text: TextSpan(
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: Colors.grey[600],
-                ),
-                children: [
-                  const TextSpan(text: 'I agree to the '),
-                  TextSpan(
-                    text: 'Terms of Service',
-                    style: TextStyle(
-                      color: AppTheme.primaryColor,
-                      fontWeight: FontWeight.w600,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
-                  const TextSpan(text: ' and '),
-                  TextSpan(
-                    text: 'Privacy Policy',
-                    style: TextStyle(
-                      color: AppTheme.primaryColor,
-                      fontWeight: FontWeight.w600,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final isSmallScreen = screenWidth <= 360; // Very small phones
+    final isMobile = screenWidth <= 768; // Mobile view
 
-  Widget _buildRegisterButton() {
-    return Consumer<AuthProvider>(
-      builder: (context, authProvider, child) {
-        final isFormValid = _acceptTerms;
-        return Container(
-          width: double.infinity,
-          height: 56.h,
-          decoration: BoxDecoration(
-            gradient: isFormValid
-                ? const LinearGradient(
-              colors: [Color(0xFF764ba2), Color(0xFF667eea)],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-                  )
-                : LinearGradient(
-              colors: [Colors.grey[400]!, Colors.grey[500]!],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-                  ),
-            borderRadius: BorderRadius.circular(16.r),
-            boxShadow: isFormValid ? [
-              BoxShadow(
-                color: AppTheme.accentColor.withOpacity(0.3),
-                blurRadius: 15,
-                offset: const Offset(0, 8),
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 4.w : 0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Transform.scale(
+            scale: isSmallScreen ? 0.8 : 0.9,
+            child: Checkbox(
+              value: _acceptTerms,
+              onChanged: (value) {
+                setState(() {
+                  _acceptTerms = value ?? false;
+                });
+              },
+              activeColor: AppTheme.primaryColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4.r),
               ),
-            ] : [],
+            ),
           ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: (authProvider.isLoading || !isFormValid)
-                  ? null
-                  : _handleRegister,
-              borderRadius: BorderRadius.circular(16.r),
-              child: Container(
-                alignment: Alignment.center,
-                child: authProvider.isLoading
-                    ? SizedBox(
-                  width: 24.w,
-                  height: 24.w,
-                  child: const CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          SizedBox(width: isSmallScreen ? 2.w : 4.w),
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _acceptTerms = !_acceptTerms;
+                });
+              },
+              child: RichText(
+                text: TextSpan(
+                  style: TextStyle(
+                    fontSize: isSmallScreen ? 14.sp : isMobile ? 16.sp : 14.sp,
+                    color: Colors.grey[600],
+                    height: 1.3,
                   ),
-                )
-                    : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      FontAwesomeIcons.userPlus,
-                      size: 18.sp,
-                      color: Colors.white,
-                    ),
-                    SizedBox(width: 12.w),
-                    Text(
-                      'Create Account',
+                    const TextSpan(text: 'I agree to the '),
+                    TextSpan(
+                      text: 'Terms of Service',
                       style: TextStyle(
-                        fontSize: 16.sp,
+                        color: AppTheme.primaryColor,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                    const TextSpan(text: ' and '),
+                    TextSpan(
+                      text: 'Privacy Policy',
+                      style: TextStyle(
+                        color: AppTheme.primaryColor,
+                        fontWeight: FontWeight.w600,
+                        decoration: TextDecoration.underline,
                       ),
                     ),
                   ],
                 ),
+                maxLines: isSmallScreen ? 3 : 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.start,
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEnhancedRegisterButton() {
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final isTablet = screenWidth > 768 &&
+        screenWidth <= 1200; // Updated breakpoint
+    final isMobile = screenWidth <= 768; // Updated breakpoint
+
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, _) {
+        return Container(
+          width: double.infinity,
+          height: isMobile ? 52.h : isTablet ? 60.h : 56.h,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(
+                isMobile ? 12.r : isTablet ? 16.r : 14.r),
+            gradient: LinearGradient(
+              colors: [
+                Theme
+                    .of(context)
+                    .primaryColor,
+                Theme
+                    .of(context)
+                    .primaryColor
+                    .withOpacity(0.8),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Theme
+                    .of(context)
+                    .primaryColor
+                    .withOpacity(0.3),
+                blurRadius: isMobile ? 15 : isTablet ? 20 : 15,
+                offset: Offset(0, isMobile ? 6 : 8),
+              ),
+            ],
+          ),
+          child: ElevatedButton(
+            onPressed: authProvider.isLoading ? null : _handleRegister,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              shadowColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(
+                    isMobile ? 12.r : isTablet ? 16.r : 14.r),
+              ),
+              padding: EdgeInsets.symmetric(
+                vertical: isMobile ? 14.h : isTablet ? 16.h : 12.h,
+                horizontal: isMobile ? 24.w : isTablet ? 32.w : 24.w,
+              ),
+            ),
+            child: authProvider.isLoading
+                ? SizedBox(
+              height: isMobile ? 22 : isTablet ? 28 : 24,
+              width: isMobile ? 22 : isTablet ? 28 : 24,
+                    child: const CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      strokeWidth: 2.5,
+                    ),
+                  )
+                : Text(
+                    'Create Account',
+                    style: TextStyle(
+                      fontSize: isMobile ? 17.sp : isTablet ? 20.sp : 18.sp,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
+                    ),
             ),
           ),
         );
@@ -947,49 +1237,71 @@ class _RegisterScreenState extends State<RegisterScreen>
   }
 
   Widget _buildEnhancedGoogleButton() {
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final isTablet = screenWidth > 768 &&
+        screenWidth <= 1200; // Updated breakpoint
+    final isMobile = screenWidth <= 768; // Updated breakpoint
+
     return Consumer<AuthProvider>(
-      builder: (context, authProvider, child) {
+      builder: (context, authProvider, _) {
         return Container(
           width: double.infinity,
-          height: 56.h,
+          height: isMobile ? 52.h : isTablet ? 60.h : 56.h,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(
+                isMobile ? 12.r : isTablet ? 16.r : 14.r),
+            border: Border.all(
+              color: Colors.grey[300]!,
+              width: 1.5,
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: isMobile ? 12 : isTablet ? 20 : 15,
                 offset: const Offset(0, 4),
               ),
             ],
           ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: authProvider.isLoading ? null : _handleGoogleSignIn,
-              borderRadius: BorderRadius.circular(16.r),
-              child: Container(
-                alignment: Alignment.center,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      FontAwesomeIcons.google,
-                      size: 20.sp,
-                      color: const Color(0xFFDB4437),
-                    ),
-                    SizedBox(width: 12.w),
-                    Text(
-                      'Continue with Google',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                  ],
-                ),
+          child: ElevatedButton.icon(
+            onPressed: authProvider.isLoading ? null : _handleGoogleSignIn,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.black87,
+              shadowColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(
+                    isMobile ? 12.r : isTablet ? 16.r : 14.r),
+              ),
+              padding: EdgeInsets.symmetric(
+                vertical: isMobile ? 14.h : isTablet ? 16.h : 12.h,
+                horizontal: isMobile ? 20.w : isTablet ? 32.w : 24.w,
+              ),
+            ),
+            icon: authProvider.isLoading
+                ? SizedBox(
+              height: isMobile ? 18 : isTablet ? 24 : 20,
+              width: isMobile ? 18 : isTablet ? 24 : 20,
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.grey[600]!),
+                strokeWidth: 2,
+              ),
+            )
+                : Icon(
+              FontAwesomeIcons.google,
+              size: isMobile ? 16 : isTablet ? 22 : 18,
+              color: const Color(0xFFDB4437),
+            ),
+            label: Text(
+              'Continue with Google',
+              style: TextStyle(
+                fontSize: isMobile ? 15.sp : isTablet ? 18.sp : 16.sp,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+                letterSpacing: 0.3,
               ),
             ),
           ),
@@ -999,6 +1311,12 @@ class _RegisterScreenState extends State<RegisterScreen>
   }
 
   Widget _buildSignInSection() {
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final isMobile = screenWidth <= 768; // Mobile view
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -1006,7 +1324,7 @@ class _RegisterScreenState extends State<RegisterScreen>
           "Already have an account? ",
           style: TextStyle(
             color: Colors.grey[600],
-            fontSize: 15.sp,
+            fontSize: isMobile ? 16.sp : 15.sp, // Increased mobile font size
           ),
         ),
         TextButton(
@@ -1015,12 +1333,14 @@ class _RegisterScreenState extends State<RegisterScreen>
               context,
               PageRouteBuilder(
                 pageBuilder: (context, animation, secondaryAnimation) =>
-                    const LoginScreen(),
-                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                const LoginScreen(),
+                transitionsBuilder: (context, animation, secondaryAnimation,
+                    child) {
                   return SlideTransition(
-                    position: animation.drive(
-                      Tween(begin: const Offset(-1.0, 0.0), end: Offset.zero),
-                    ),
+                    position: Tween<Offset>(
+                      begin: const Offset(-1.0, 0.0),
+                      end: Offset.zero,
+                    ).animate(animation),
                     child: child,
                   );
                 },
@@ -1031,7 +1351,7 @@ class _RegisterScreenState extends State<RegisterScreen>
             'Sign In',
             style: TextStyle(
               color: AppTheme.primaryColor,
-              fontSize: 15.sp,
+              fontSize: isMobile ? 17.sp : 15.sp, // Increased mobile font size
               fontWeight: FontWeight.w700,
             ),
           ),

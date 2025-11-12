@@ -244,7 +244,13 @@ class _LoginScreenState extends State<LoginScreen>
     return SafeArea(
       child: Center(
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(24.w),
+          padding: EdgeInsets.symmetric(
+            horizontal: MediaQuery
+                .of(context)
+                .size
+                .width > 800 ? 40.w : 24.w,
+            vertical: 24.h,
+          ),
           child: AnimatedBuilder(
             animation: _animationController,
             builder: (context, child) {
@@ -266,29 +272,77 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Widget _buildFormContent() {
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final isTablet = screenWidth > 768 &&
+        screenWidth <= 1200; // Changed breakpoint from 600 to 768
+    final isDesktop = screenWidth > 1200;
+    final isMobile = screenWidth <=
+        768; // Changed from 600 to 768 - now mobile gets tablet styling
+    final isSmallMobile = screenWidth <= 400;
+    final isWebMobile = kIsWeb &&
+        screenWidth <= 600; // Keep web mobile detection separate
+
     return Container(
       constraints: BoxConstraints(
-        maxWidth: MediaQuery
-            .of(context)
-            .size
-            .width > 600 ? 450.w : 400.w, // Better web sizing
-        minWidth: 300.w,
+        maxWidth: isDesktop
+            ? 500.w
+            : isTablet
+            ? 520.w // Increased tablet width from 450w to 520w - much bigger
+            : isWebMobile
+            ? 420.0
+            : isSmallMobile
+            ? screenWidth * 0.95
+            : 480.w, // Mobile now gets 480w (old tablet size)
+        minWidth: isWebMobile
+            ? 380.0
+            : isSmallMobile
+            ? screenWidth * 0.9
+            : 400.w, // Increased mobile minimum
       ),
-      margin: EdgeInsets.symmetric(horizontal: 20.w),
-      padding: EdgeInsets.all(32.w),
+      margin: EdgeInsets.symmetric(
+        horizontal: isWebMobile
+            ? 20.0
+            : isMobile
+            ? 20.w // Increased mobile margins for more spacious look
+            : isTablet
+            ? 50.w // Increased tablet margins
+            : 20.w,
+      ),
+      padding: EdgeInsets.all(
+        isWebMobile
+            ? 32.0
+            : isMobile
+            ? 36.w // Increased mobile padding (old tablet size)
+            : isTablet
+            ? 48.w // Much bigger tablet padding
+            : 32.w,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24.r),
+        borderRadius: BorderRadius.circular(
+          isWebMobile
+              ? 20.0
+              : isMobile
+              ? 24.r // Mobile gets old tablet radius
+              : isTablet
+              ? 32.r // Bigger tablet radius
+              : 24.r,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08), // Reduced shadow for web
-            blurRadius: 25,
-            offset: const Offset(0, 12),
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: isWebMobile ? 25.0 : isMobile ? 30 : isTablet ? 40 : 25,
+            // Enhanced shadows
+            offset: Offset(
+                0, isWebMobile ? 12.0 : isMobile ? 15 : isTablet ? 20 : 12),
             spreadRadius: 0,
           ),
           BoxShadow(
             color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
+            blurRadius: isWebMobile ? 10.0 : isMobile ? 12 : isTablet ? 15 : 12,
             offset: const Offset(0, 4),
             spreadRadius: 0,
           ),
@@ -300,25 +354,69 @@ class _LoginScreenState extends State<LoginScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             FadeInDown(
-              duration: const Duration(milliseconds: 600), // Faster for web
+              duration: const Duration(milliseconds: 600),
               child: _buildEnhancedLogo(),
             ),
-            SizedBox(height: 40.h),
+            SizedBox(height: isWebMobile
+                ? 32.0
+                : isMobile
+                ? 40.h // Mobile gets old tablet spacing
+                : isTablet
+                ? 56.h // Much bigger tablet spacing
+                : 40.h),
             _buildEnhancedEmailField(),
-            SizedBox(height: 20.h),
+            SizedBox(height: isWebMobile
+                ? 20.0
+                : isMobile
+                ? 22.h // Increased mobile spacing
+                : isTablet
+                ? 28.h // Much bigger tablet spacing
+                : 20.h),
             _buildEnhancedPasswordField(),
-            SizedBox(height: 16.h),
+            SizedBox(height: isWebMobile
+                ? 16.0
+                : isMobile
+                ? 18.h // Increased mobile spacing
+                : isTablet
+                ? 24.h // Bigger tablet spacing
+                : 16.h),
             _buildRememberAndForgot(),
-            SizedBox(height: 32.h),
+            SizedBox(height: isWebMobile
+                ? 28.0
+                : isMobile
+                ? 32.h // Mobile gets old tablet spacing
+                : isTablet
+                ? 44.h // Much bigger tablet spacing
+                : 32.h),
             _buildEnhancedLoginButton(),
-            SizedBox(height: 24.h),
+            SizedBox(height: isWebMobile
+                ? 20.0
+                : isMobile
+                ? 24.h // Increased mobile spacing
+                : isTablet
+                ? 36.h // Much bigger tablet spacing
+                : 24.h),
             _buildEnhancedDivider(),
-            SizedBox(height: 24.h),
-            _buildEnhancedGoogleButton(),
-            SizedBox(height: 32.h),
+            SizedBox(height: isWebMobile
+                ? 20.0
+                : isMobile
+                ? 24.h // Increased mobile spacing
+                : isTablet
+                ? 36.h // Much bigger tablet spacing
+                : 24.h),
+            _buildGoogleSignInButton(),
+            SizedBox(height: isWebMobile
+                ? 28.0
+                : isMobile
+                ? 32.h // Mobile gets old tablet spacing
+                : isTablet
+                ? 44.h // Much bigger tablet spacing
+                : 32.h),
             _buildSignUpSection(),
-            SizedBox(height: 20.h),
-            // _buildAdminSection(),
+            // if (isDesktop) ...[
+            //   SizedBox(height: 24.h),
+            //   _buildAdminSection(),
+            // ],
           ],
         ),
       ),
@@ -326,6 +424,16 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Widget _buildEnhancedLogo() {
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final isTablet = screenWidth > 768 &&
+        screenWidth <= 1200; // Updated breakpoint
+    final isMobile = screenWidth <= 768; // Updated breakpoint
+    final isSmallMobile = screenWidth <= 400;
+    final isWebMobile = kIsWeb && screenWidth <= 600;
+
     return AnimatedBuilder(
       animation: _pulseAnimation,
       builder: (context, child) {
@@ -334,8 +442,24 @@ class _LoginScreenState extends State<LoginScreen>
           child: Column(
             children: [
               Container(
-                width: 90.w,
-                height: 90.w,
+                width: isWebMobile
+                    ? 90.0
+                    : isSmallMobile
+                    ? 75.w
+                    : isMobile
+                    ? 100.w // Mobile gets bigger logo (old tablet size)
+                    : isTablet
+                    ? 120.w // Much bigger tablet logo
+                    : 90.w,
+                height: isWebMobile
+                    ? 90.0
+                    : isSmallMobile
+                    ? 75.w
+                    : isMobile
+                    ? 100.w // Mobile gets bigger logo
+                    : isTablet
+                    ? 120.w // Much bigger tablet logo
+                    : 90.w,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [
@@ -349,33 +473,90 @@ class _LoginScreenState extends State<LoginScreen>
                   boxShadow: [
                     BoxShadow(
                       color: AppTheme.primaryColor.withOpacity(0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
+                      blurRadius: isWebMobile
+                          ? 20.0
+                          : isSmallMobile
+                          ? 15
+                          : isMobile
+                          ? 25 // Mobile gets enhanced shadow
+                          : isTablet
+                          ? 30 // Much bigger tablet shadow
+                          : 20,
+                      offset: Offset(0, isWebMobile
+                          ? 8.0
+                          : isSmallMobile
+                          ? 5
+                          : isMobile
+                          ? 10 // Enhanced mobile shadow offset
+                          : isTablet
+                          ? 15 // Much bigger tablet shadow offset
+                          : 8),
                     ),
                   ],
                 ),
                 child: Icon(
                   FontAwesomeIcons.user,
-                  size: 36.sp,
+                  size: isWebMobile
+                      ? 36.0
+                      : isSmallMobile
+                      ? 28.sp
+                      : isMobile
+                      ? 40.sp // Mobile gets bigger icon (old tablet size)
+                      : isTablet
+                      ? 48.sp // Much bigger tablet icon
+                      : 36.sp,
                   color: Colors.white,
                 ),
               ),
-              SizedBox(height: 20.h),
+              SizedBox(height: isWebMobile
+                  ? 24.0
+                  : isSmallMobile
+                  ? 16.h
+                  : isMobile
+                  ? 24.h // Mobile gets old tablet spacing
+                  : isTablet
+                  ? 32.h // Much bigger tablet spacing
+                  : 20.h),
               Text(
-                'Welcome Back! 👋',
+                'Welcome Back! ',
                 style: AppTheme.headingStyle.copyWith(
-                  fontSize: 28.sp,
+                  fontSize: isWebMobile
+                      ? 28.0
+                      : isSmallMobile
+                      ? 22.sp
+                      : isMobile
+                      ? 28.sp // Mobile gets old tablet font size
+                      : isTablet
+                      ? 36.sp // Much bigger tablet font
+                      : 28.sp,
                   color: AppTheme.primaryColor,
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              SizedBox(height: 8.h),
+              SizedBox(height: isWebMobile
+                  ? 10.0
+                  : isSmallMobile
+                  ? 6.h
+                  : isMobile
+                  ? 10.h // Mobile gets old tablet spacing
+                  : isTablet
+                  ? 14.h // Much bigger tablet spacing
+                  : 8.h),
               Text(
                 'Sign in to continue your journey',
                 style: AppTheme.bodyStyle.copyWith(
                   color: Colors.grey[600],
-                  fontSize: 16.sp,
+                  fontSize: isWebMobile
+                      ? 16.0
+                      : isSmallMobile
+                      ? 14.sp
+                      : isMobile
+                      ? 16.sp // Mobile gets old tablet font size
+                      : isTablet
+                      ? 20.sp // Much bigger tablet font
+                      : 16.sp,
                 ),
+                textAlign: TextAlign.center,
               ),
             ],
           ),
@@ -385,65 +566,217 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Widget _buildEnhancedEmailField() {
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final isTablet = screenWidth > 768 && screenWidth <= 1200;
+    final isMobile = screenWidth <= 768;
+    final isSmallMobile = screenWidth <= 400;
+    final isWebMobile = kIsWeb && screenWidth <= 600;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Email Address',
           style: TextStyle(
-            fontSize: 14.sp,
+            fontSize: isWebMobile
+                ? 15.0
+                : isSmallMobile
+                ? 14.sp
+                : isMobile
+                ? 16.sp // Mobile gets bigger font (old tablet size)
+                : isTablet
+                ? 18.sp // Bigger tablet font
+                : 14.sp,
             fontWeight: FontWeight.w600,
             color: Colors.grey[700],
           ),
         ),
-        SizedBox(height: 8.h),
-        FormBuilderTextField(
-          name: 'email',
-          decoration: InputDecoration(
-            hintText: 'Enter your email',
-            hintStyle: TextStyle(
-              color: Colors.grey[400],
-              fontSize: 16.sp,
-            ),
-            prefixIcon: Container(
-              margin: EdgeInsets.all(12.w),
-              padding: EdgeInsets.all(8.w),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8.r),
+        SizedBox(height: isWebMobile ? 10.0 : isSmallMobile ? 8.h : isMobile
+            ? 12.h
+            : isTablet ? 14.h : 8.h),
+        Container(
+          height: isWebMobile
+              ? 54.0
+              : isSmallMobile
+              ? 50.h
+              : isMobile
+              ? 58.h // Mobile gets bigger height (old tablet size)
+              : isTablet
+              ? 66.h // Much bigger tablet height
+              : 56.h,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(
+                isWebMobile
+                    ? 14.0
+                    : isSmallMobile
+                    ? 10.r
+                    : isMobile
+                    ? 16.r // Mobile gets bigger radius (old tablet size)
+                    : isTablet
+                    ? 20.r // Much bigger tablet radius
+                    : 14.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: isWebMobile ? 14.0 : isSmallMobile ? 10 : isMobile
+                    ? 18
+                    : isTablet ? 25 : 15,
+                offset: const Offset(0, 4),
               ),
-              child: Icon(
-                FontAwesomeIcons.envelope,
-                size: 16.sp,
-                color: AppTheme.primaryColor,
-              ),
+            ],
+            border: Border.all(
+              color: Colors.grey[200]!,
+              width: 1,
             ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16.r),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16.r),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16.r),
-              borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
-            ),
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: EdgeInsets.symmetric(
-                horizontal: 20.w, vertical: 16.h),
           ),
-          validator: FormBuilderValidators.compose([
-            FormBuilderValidators.required(errorText: 'Email is required'),
-            FormBuilderValidators.email(errorText: 'Enter a valid email'),
-          ]),
-          keyboardType: TextInputType.emailAddress,
-          style: TextStyle(
-            fontSize: 16.sp,
-            color: Colors.black87,
-            fontWeight: FontWeight.w500,
+          child: FormBuilderTextField(
+            name: 'email',
+            decoration: InputDecoration(
+              hintText: 'Enter your email',
+              hintStyle: TextStyle(
+                color: Colors.grey[400],
+                fontSize: isWebMobile
+                    ? 16.0
+                    : isSmallMobile
+                    ? 15.sp
+                    : isMobile
+                    ? 18.sp // Mobile gets bigger font (old tablet size)
+                    : isTablet
+                    ? 20.sp // Much bigger tablet font
+                    : 16.sp,
+                fontWeight: FontWeight.w400,
+              ),
+              prefixIcon: Container(
+                margin: EdgeInsets.all(
+                    isWebMobile
+                        ? 12.0
+                        : isSmallMobile
+                        ? 8.w
+                        : isMobile
+                        ? 14.w // Mobile gets bigger margins (old tablet size)
+                        : isTablet
+                        ? 16.w // Much bigger tablet margins
+                        : 12.w),
+                padding: EdgeInsets.all(isWebMobile
+                    ? 8.0
+                    : isSmallMobile
+                    ? 6.w
+                    : isMobile
+                    ? 10.w // Mobile gets bigger padding (old tablet size)
+                    : isTablet
+                    ? 12.w // Much bigger tablet padding
+                    : 8.w),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(
+                      isWebMobile
+                          ? 8.0
+                          : isSmallMobile
+                          ? 6.r
+                          : isMobile
+                          ? 10.r // Mobile gets bigger radius (old tablet size)
+                          : isTablet
+                          ? 12.r // Much bigger tablet radius
+                          : 8.r),
+                ),
+                child: Icon(
+                  FontAwesomeIcons.envelope,
+                  size: isWebMobile
+                      ? 16.0
+                      : isSmallMobile
+                      ? 14.sp
+                      : isMobile
+                      ? 18.sp // Mobile gets bigger icon (old tablet size)
+                      : isTablet
+                      ? 20.sp // Much bigger tablet icon
+                      : 16.sp,
+                  color: AppTheme.primaryColor,
+                ),
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(
+                    isWebMobile
+                        ? 14.0
+                        : isSmallMobile
+                        ? 10.r
+                        : isMobile
+                        ? 16.r // Mobile gets bigger radius (old tablet size)
+                        : isTablet
+                        ? 20.r // Much bigger tablet radius
+                        : 14.r),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(
+                    isWebMobile
+                        ? 14.0
+                        : isSmallMobile
+                        ? 10.r
+                        : isMobile
+                        ? 16.r
+                        : isTablet
+                        ? 20.r
+                        : 14.r),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(
+                    isWebMobile
+                        ? 14.0
+                        : isSmallMobile
+                        ? 10.r
+                        : isMobile
+                        ? 16.r
+                        : isTablet
+                        ? 20.r
+                        : 14.r),
+                borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
+              ),
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: isWebMobile
+                    ? 18.0
+                    : isSmallMobile
+                    ? 14.w
+                    : isMobile
+                    ? 22.w // Mobile gets bigger padding (old tablet size)
+                    : isTablet
+                    ? 28.w // Much bigger tablet padding
+                    : 20.w,
+                vertical: isWebMobile
+                    ? 16.0
+                    : isSmallMobile
+                    ? 12.h
+                    : isMobile
+                    ? 18.h // Mobile gets bigger padding (old tablet size)
+                    : isTablet
+                    ? 22.h // Much bigger tablet padding
+                    : 16.h,
+              ),
+            ),
+            validator: FormBuilderValidators.compose([
+              FormBuilderValidators.required(errorText: 'Email is required'),
+              FormBuilderValidators.email(errorText: 'Enter a valid email'),
+            ]),
+            keyboardType: TextInputType.emailAddress,
+            style: TextStyle(
+              fontSize: isWebMobile
+                  ? 16.0
+                  : isSmallMobile
+                  ? 15.sp
+                  : isMobile
+                  ? 18.sp // Mobile gets bigger font (old tablet size)
+                  : isTablet
+                  ? 20.sp // Much bigger tablet font
+                  : 16.sp,
+              color: Colors.black87,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ],
@@ -451,80 +784,238 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Widget _buildEnhancedPasswordField() {
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final isTablet = screenWidth > 768 && screenWidth <= 1200;
+    final isMobile = screenWidth <= 768;
+    final isSmallMobile = screenWidth <= 400;
+    final isWebMobile = kIsWeb && screenWidth <= 600;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Password',
           style: TextStyle(
-            fontSize: 14.sp,
+            fontSize: isWebMobile
+                ? 15.0
+                : isSmallMobile
+                ? 14.sp
+                : isMobile
+                ? 16.sp // Mobile gets bigger font (old tablet size)
+                : isTablet
+                ? 18.sp // Bigger tablet font
+                : 16.sp,
             fontWeight: FontWeight.w600,
             color: Colors.grey[700],
           ),
         ),
-        SizedBox(height: 8.h),
-        FormBuilderTextField(
-          name: 'password',
-          obscureText: _obscurePassword,
-          decoration: InputDecoration(
-            hintText: 'Enter your password',
-            hintStyle: TextStyle(
-              color: Colors.grey[400],
-              fontSize: 16.sp,
-            ),
-            prefixIcon: Container(
-              margin: EdgeInsets.all(12.w),
-              padding: EdgeInsets.all(8.w),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8.r),
+        SizedBox(height: isWebMobile ? 10.0 : isSmallMobile ? 8.h : isMobile
+            ? 12.h
+            : isTablet ? 14.h : 8.h),
+        Container(
+          height: isWebMobile
+              ? 54.0
+              : isSmallMobile
+              ? 50.h
+              : isMobile
+              ? 58.h // Mobile gets bigger height (old tablet size)
+              : isTablet
+              ? 66.h // Much bigger tablet height
+              : 56.h,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(
+                isWebMobile
+                    ? 14.0
+                    : isSmallMobile
+                    ? 10.r
+                    : isMobile
+                    ? 16.r // Mobile gets bigger radius (old tablet size)
+                    : isTablet
+                    ? 20.r // Much bigger tablet radius
+                    : 14.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: isWebMobile ? 14.0 : isSmallMobile ? 10 : isMobile
+                    ? 18
+                    : isTablet ? 25 : 15,
+                offset: const Offset(0, 4),
               ),
-              child: Icon(
-                FontAwesomeIcons.lock,
-                size: 16.sp,
-                color: AppTheme.primaryColor,
-              ),
+            ],
+            border: Border.all(
+              color: Colors.grey[200]!,
+              width: 1,
             ),
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscurePassword
-                    ? FontAwesomeIcons.eyeSlash
-                    : FontAwesomeIcons.eye,
-                size: 18.sp,
-                color: Colors.grey[600],
-              ),
-              onPressed: () {
-                setState(() {
-                  _obscurePassword = !_obscurePassword;
-                });
-              },
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16.r),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16.r),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16.r),
-              borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
-            ),
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: EdgeInsets.symmetric(
-                horizontal: 20.w, vertical: 16.h),
           ),
-          validator: FormBuilderValidators.compose([
-            FormBuilderValidators.required(errorText: 'Password is required'),
-            FormBuilderValidators.minLength(
-                6, errorText: 'Password must be at least 6 characters'),
-          ]),
-          style: TextStyle(
-            fontSize: 16.sp,
-            color: Colors.black87,
-            fontWeight: FontWeight.w500,
+          child: FormBuilderTextField(
+            name: 'password',
+            obscureText: _obscurePassword,
+            decoration: InputDecoration(
+              hintText: 'Enter your password',
+              hintStyle: TextStyle(
+                color: Colors.grey[400],
+                fontSize: isWebMobile
+                    ? 16.0
+                    : isSmallMobile
+                    ? 15.sp
+                    : isMobile
+                    ? 18.sp // Mobile gets bigger font (old tablet size)
+                    : isTablet
+                    ? 20.sp // Much bigger tablet font
+                    : 16.sp,
+                fontWeight: FontWeight.w400,
+              ),
+              prefixIcon: Container(
+                margin: EdgeInsets.all(
+                    isWebMobile
+                        ? 12.0
+                        : isSmallMobile
+                        ? 8.w
+                        : isMobile
+                        ? 14.w // Mobile gets bigger margins (old tablet size)
+                        : isTablet
+                        ? 16.w // Much bigger tablet margins
+                        : 12.w),
+                padding: EdgeInsets.all(isWebMobile
+                    ? 8.0
+                    : isSmallMobile
+                    ? 6.w
+                    : isMobile
+                    ? 10.w // Mobile gets bigger padding (old tablet size)
+                    : isTablet
+                    ? 12.w // Much bigger tablet padding
+                    : 8.w),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(
+                      isWebMobile
+                          ? 8.0
+                          : isSmallMobile
+                          ? 6.r
+                          : isMobile
+                          ? 10.r // Mobile gets bigger radius (old tablet size)
+                          : isTablet
+                          ? 12.r // Much bigger tablet radius
+                          : 8.r),
+                ),
+                child: Icon(
+                  FontAwesomeIcons.lock,
+                  size: isWebMobile
+                      ? 16.0
+                      : isSmallMobile
+                      ? 14.sp
+                      : isMobile
+                      ? 18.sp // Mobile gets bigger icon (old tablet size)
+                      : isTablet
+                      ? 20.sp // Much bigger tablet icon
+                      : 16.sp,
+                  color: AppTheme.primaryColor,
+                ),
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(
+                    isWebMobile
+                        ? 14.0
+                        : isSmallMobile
+                        ? 10.r
+                        : isMobile
+                        ? 16.r // Mobile gets bigger radius (old tablet size)
+                        : isTablet
+                        ? 20.r // Much bigger tablet radius
+                        : 14.r),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(
+                    isWebMobile
+                        ? 14.0
+                        : isSmallMobile
+                        ? 10.r
+                        : isMobile
+                        ? 16.r
+                        : isTablet
+                        ? 20.r
+                        : 14.r),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(
+                    isWebMobile
+                        ? 14.0
+                        : isSmallMobile
+                        ? 10.r
+                        : isMobile
+                        ? 16.r
+                        : isTablet
+                        ? 20.r
+                        : 14.r),
+                borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
+              ),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: isWebMobile
+                    ? 18.0
+                    : isSmallMobile
+                    ? 14.w
+                    : isMobile
+                    ? 22.w // Mobile gets bigger padding (old tablet size)
+                    : isTablet
+                    ? 28.w // Much bigger tablet padding
+                    : 20.w,
+                vertical: isWebMobile
+                    ? 16.0
+                    : isSmallMobile
+                    ? 12.h
+                    : isMobile
+                    ? 18.h // Mobile gets bigger padding (old tablet size)
+                    : isTablet
+                    ? 22.h // Much bigger tablet padding
+                    : 16.h,
+              ),
+              filled: true,
+              fillColor: Colors.white,
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                  color: Colors.grey[600],
+                  size: isWebMobile
+                      ? 22.0
+                      : isSmallMobile
+                      ? 18
+                      : isMobile
+                      ? 24 // Mobile gets bigger icon (old tablet size)
+                      : isTablet
+                      ? 28 // Much bigger tablet icon
+                      : 20,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _obscurePassword = !_obscurePassword;
+                  });
+                },
+              ),
+            ),
+            validator: FormBuilderValidators.compose([
+              FormBuilderValidators.required(errorText: 'Password is required'),
+              FormBuilderValidators.minLength(
+                  6, errorText: 'Password must be at least 6 characters'),
+            ]),
+            style: TextStyle(
+              fontSize: isWebMobile
+                  ? 16.0
+                  : isSmallMobile
+                  ? 15.sp
+                  : isMobile
+                  ? 18.sp // Mobile gets bigger font (old tablet size)
+                  : isTablet
+                  ? 20.sp // Much bigger tablet font
+                  : 16.sp,
+              color: Colors.black87,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ],
@@ -532,123 +1023,245 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Widget _buildRememberAndForgot() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            Transform.scale(
-              scale: 0.8,
-              child: Checkbox(
-                value: _rememberMe,
-                onChanged: (value) {
-                  setState(() {
-                    _rememberMe = value ?? false;
-                  });
-                },
-                activeColor: AppTheme.primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4.r),
-                ),
-              ),
-            ),
-            Text(
-              'Remember me',
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: Colors.grey[600],
-              ),
-            ),
-          ],
-        ),
-        TextButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              PageRouteBuilder(
-                pageBuilder: (context, animation, secondaryAnimation) =>
-                const ForgotPasswordScreen(),
-                transitionsBuilder: (context, animation, secondaryAnimation,
-                    child) {
-                  return SlideTransition(
-                    position: animation.drive(
-                      Tween(begin: const Offset(1.0, 0.0), end: Offset.zero),
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final isSmallScreen = screenWidth <= 360; // Very small phones
+    final isMobile = screenWidth <= 768; // Mobile view
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 4.w : 0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Flexible(
+            flex: isSmallScreen ? 2 : 1,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Transform.scale(
+                  scale: isSmallScreen ? 0.7 : 0.8,
+                  child: Checkbox(
+                    value: _rememberMe,
+                    onChanged: (value) {
+                      setState(() {
+                        _rememberMe = value ?? false;
+                      });
+                    },
+                    activeColor: AppTheme.primaryColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4.r),
                     ),
-                    child: child,
-                  );
-                },
-              ),
-            );
-          },
-          child: Text(
-            'Forgot Password?',
-            style: TextStyle(
-              color: AppTheme.primaryColor,
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Flexible(
+                  child: Text(
+                    'Remember me',
+                    style: TextStyle(
+                      fontSize: isSmallScreen ? 14.sp : isMobile ? 16.sp : 14
+                          .sp, // Increased mobile font size
+                      color: Colors.grey[600],
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
-      ],
+          Flexible(
+            flex: isSmallScreen ? 3 : 1,
+            child: TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation, secondaryAnimation) =>
+                    const ForgotPasswordScreen(),
+                    transitionsBuilder: (context, animation, secondaryAnimation,
+                        child) {
+                      return SlideTransition(
+                        position: animation.drive(
+                          Tween(
+                              begin: const Offset(1.0, 0.0), end: Offset.zero),
+                        ),
+                        child: child,
+                      );
+                    },
+                  ),
+                );
+              },
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isSmallScreen ? 8.w : 16.w,
+                  vertical: 8.h,
+                ),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text(
+                'Forgot Password?',
+                style: TextStyle(
+                  color: AppTheme.primaryColor,
+                  fontSize: isSmallScreen ? 14.sp : isMobile ? 16.sp : 14.sp,
+                  // Increased mobile font size
+                  fontWeight: FontWeight.w600,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                textAlign: TextAlign.end,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildEnhancedLoginButton() {
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final isTablet = screenWidth > 768 && screenWidth <= 1200;
+    final isMobile = screenWidth <= 768;
+
     return Consumer<AuthProvider>(
-      builder: (context, authProvider, child) {
+      builder: (context, authProvider, _) {
         return Container(
           width: double.infinity,
-          height: 56.h,
+          height: isMobile ? 52.h : isTablet ? 60.h : 56.h,
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
+            borderRadius: BorderRadius.circular(
+                isMobile ? 12.r : isTablet ? 16.r : 14.r),
+            gradient: LinearGradient(
+              colors: [
+                Theme
+                    .of(context)
+                    .primaryColor,
+                Theme
+                    .of(context)
+                    .primaryColor
+                    .withOpacity(0.8),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(16.r),
             boxShadow: [
               BoxShadow(
-                color: AppTheme.primaryColor.withOpacity(0.3),
-                blurRadius: 15,
-                offset: const Offset(0, 8),
+                color: Theme
+                    .of(context)
+                    .primaryColor
+                    .withOpacity(0.3),
+                blurRadius: isMobile ? 15 : isTablet ? 20 : 15,
+                offset: Offset(0, isMobile ? 6 : 8),
               ),
             ],
           ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: authProvider.isLoading ? null : _handleLogin,
-              borderRadius: BorderRadius.circular(16.r),
-              child: Container(
-                alignment: Alignment.center,
-                child: authProvider.isLoading
-                    ? SizedBox(
-                  width: 24.w,
-                  height: 24.w,
-                  child: const CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                )
-                    : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      FontAwesomeIcons.arrowRight,
-                      size: 18.sp,
-                      color: Colors.white,
-                    ),
-                    SizedBox(width: 12.w),
-                    Text(
-                      'Sign In',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
+          child: ElevatedButton(
+            onPressed: authProvider.isLoading ? null : _handleLogin,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              shadowColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(
+                    isMobile ? 12.r : isTablet ? 16.r : 14.r),
+              ),
+              padding: EdgeInsets.symmetric(
+                vertical: isMobile ? 14.h : isTablet ? 16.h : 12.h,
+                horizontal: isMobile ? 24.w : isTablet ? 32.w : 24.w,
+              ),
+            ),
+            child: authProvider.isLoading
+                ? SizedBox(
+              height: isMobile ? 22 : isTablet ? 28 : 24,
+              width: isMobile ? 22 : isTablet ? 28 : 24,
+              child: const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                strokeWidth: 2.5,
+              ),
+            )
+                : Text(
+              'Sign In',
+              style: TextStyle(
+                fontSize: isMobile ? 17.sp : isTablet ? 20.sp : 18.sp,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildGoogleSignInButton() {
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final isTablet = screenWidth > 768 && screenWidth <= 1200;
+    final isMobile = screenWidth <= 768;
+
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, _) {
+        return Container(
+          width: double.infinity,
+          height: isMobile ? 52.h : isTablet ? 60.h : 56.h,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(
+                isMobile ? 12.r : isTablet ? 16.r : 14.r),
+            border: Border.all(
+              color: Colors.grey[300]!,
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: isMobile ? 12 : isTablet ? 20 : 15,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: ElevatedButton.icon(
+            onPressed: authProvider.isLoading ? null : _handleGoogleSignIn,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.black87,
+              shadowColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(
+                    isMobile ? 12.r : isTablet ? 16.r : 14.r),
+              ),
+              padding: EdgeInsets.symmetric(
+                vertical: isMobile ? 14.h : isTablet ? 16.h : 12.h,
+                horizontal: isMobile ? 20.w : isTablet ? 32.w : 24.w,
+              ),
+            ),
+            icon: authProvider.isLoading
+                ? SizedBox(
+              height: isMobile ? 18 : isTablet ? 24 : 20,
+              width: isMobile ? 18 : isTablet ? 24 : 20,
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.grey[600]!),
+                strokeWidth: 2,
+              ),
+            )
+                : Icon(
+              FontAwesomeIcons.google,
+              size: isMobile ? 16 : isTablet ? 22 : 18,
+              color: const Color(0xFFDB4437),
+            ),
+            label: Text(
+              'Continue with Google',
+              style: TextStyle(
+                fontSize: isMobile ? 15.sp : isTablet ? 18.sp : 16.sp,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+                letterSpacing: 0.3,
               ),
             ),
           ),
@@ -709,60 +1322,13 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  Widget _buildEnhancedGoogleButton() {
-    return Consumer<AuthProvider>(
-      builder: (context, authProvider, child) {
-        return Container(
-          width: double.infinity,
-          height: 56.h,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: Colors.grey[300]!),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: authProvider.isLoading ? null : _handleGoogleSignIn,
-              borderRadius: BorderRadius.circular(16.r),
-              child: Container(
-                alignment: Alignment.center,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Google Logo (using FontAwesome since image might be missing)
-                    Icon(
-                      FontAwesomeIcons.google,
-                      size: 20.sp,
-                      color: const Color(0xFFDB4437),
-                    ),
-                    SizedBox(width: 12.w),
-                    Text(
-                      'Continue with Google',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   Widget _buildSignUpSection() {
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final isMobile = screenWidth <= 768; // Mobile view
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -770,7 +1336,7 @@ class _LoginScreenState extends State<LoginScreen>
           "Don't have an account? ",
           style: TextStyle(
             color: Colors.grey[600],
-            fontSize: 15.sp,
+            fontSize: isMobile ? 26.sp : 15.sp, // Increased mobile font size
           ),
         ),
         TextButton(
@@ -795,7 +1361,7 @@ class _LoginScreenState extends State<LoginScreen>
             'Sign Up',
             style: TextStyle(
               color: AppTheme.primaryColor,
-              fontSize: 15.sp,
+              fontSize: isMobile ? 27.sp : 15.sp, // Increased mobile font size
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -803,25 +1369,25 @@ class _LoginScreenState extends State<LoginScreen>
       ],
     );
   }
-  //
-  // Widget _buildAdminSection() {
-  //   return ExpansionTile(
-  //     title: Text(
-  //       'Admin Access',
-  //       style: TextStyle(
-  //         fontSize: 14.sp,
-  //         fontWeight: FontWeight.w600,
-  //         color: Colors.grey[600],
-  //       ),
-  //     ),
-  //     // children: [
-  //     //   SizedBox(height: 12.h),
-  //     //   _buildAdminSetupButton(),
-  //     //   SizedBox(height: 12.h),
-  //     //   _buildDirectAdminLoginButton(),
-  //     // ],
-  //   );
-  // }
+
+  Widget _buildAdminSection() {
+    return ExpansionTile(
+      title: Text(
+        'Admin Access',
+        style: TextStyle(
+          fontSize: 14.sp,
+          fontWeight: FontWeight.w600,
+          color: Colors.grey[600],
+        ),
+      ),
+      children: [
+        SizedBox(height: 12.h),
+        _buildAdminSetupButton(),
+        SizedBox(height: 12.h),
+        _buildDirectAdminLoginButton(),
+      ],
+    );
+  }
 
   Widget _buildAdminSetupButton() {
     return Container(
