@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../providers/auth_provider.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/admin_setup.dart';
+import '../../utils/fixed_text_sizes.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
 import '../portfolio_screen.dart';
@@ -276,73 +277,70 @@ class _LoginScreenState extends State<LoginScreen>
         .of(context)
         .size
         .width;
-    final isTablet = screenWidth > 768 &&
-        screenWidth <= 1200; // Changed breakpoint from 600 to 768
-    final isDesktop = screenWidth > 1200;
-    final isMobile = screenWidth <=
-        768; // Changed from 600 to 768 - now mobile gets tablet styling
+    final screenHeight = MediaQuery
+        .of(context)
+        .size
+        .height;
+
+    // More granular breakpoints for better responsiveness
     final isSmallMobile = screenWidth <= 400;
-    final isWebMobile = kIsWeb &&
-        screenWidth <= 600; // Keep web mobile detection separate
+    final isMobile = screenWidth > 400 && screenWidth <= 600;
+    final isLargeMobile = screenWidth > 600 && screenWidth <= 768;
+    final isTablet = screenWidth > 768 && screenWidth <= 1024;
+    final isLargeTablet = screenWidth > 1024 && screenWidth <= 1200;
+    final isDesktop = screenWidth > 1200;
+    final isWebMobile = kIsWeb && screenWidth <= 600;
+
+    // Adaptive container width based on screen size
+    double getMaxWidth() {
+      if (isSmallMobile) return screenWidth * 0.95;
+      if (isMobile) return 420.0;
+      if (isLargeMobile) return 480.0;
+      if (isTablet) return 520.0;
+      if (isLargeTablet) return 560.0;
+      return 600.0; // Desktop
+    }
+
+    // Adaptive padding based on screen size
+    double getPadding() {
+      if (isSmallMobile) return 20.0;
+      if (isMobile) return 28.0;
+      if (isLargeMobile) return 32.0;
+      if (isTablet) return 40.0;
+      if (isLargeTablet) return 48.0;
+      return 56.0; // Desktop
+    }
+
+    // Adaptive spacing based on screen size
+    double getSpacing(double small, double medium, double large) {
+      if (isSmallMobile || isMobile) return small;
+      if (isLargeMobile || isTablet) return medium;
+      return large; // Desktop
+    }
 
     return Container(
       constraints: BoxConstraints(
-        maxWidth: isDesktop
-            ? 500.w
-            : isTablet
-            ? 520.w // Increased tablet width from 450w to 520w - much bigger
-            : isWebMobile
-            ? 420.0
-            : isSmallMobile
-            ? screenWidth * 0.95
-            : 480.w, // Mobile now gets 480w (old tablet size)
-        minWidth: isWebMobile
-            ? 380.0
-            : isSmallMobile
-            ? screenWidth * 0.9
-            : 400.w, // Increased mobile minimum
+        maxWidth: getMaxWidth(),
+        minWidth: isSmallMobile ? screenWidth * 0.9 : 380.0,
       ),
       margin: EdgeInsets.symmetric(
-        horizontal: isWebMobile
-            ? 20.0
-            : isMobile
-            ? 20.w // Increased mobile margins for more spacious look
-            : isTablet
-            ? 50.w // Increased tablet margins
-            : 20.w,
+        horizontal: getSpacing(16.0, 24.0, 32.0),
+        vertical: screenHeight < 700 ? 16.0 : 24.0, // Adaptive vertical margin
       ),
-      padding: EdgeInsets.all(
-        isWebMobile
-            ? 32.0
-            : isMobile
-            ? 36.w // Increased mobile padding (old tablet size)
-            : isTablet
-            ? 48.w // Much bigger tablet padding
-            : 32.w,
-      ),
+      padding: EdgeInsets.all(getPadding()),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(
-          isWebMobile
-              ? 20.0
-              : isMobile
-              ? 24.r // Mobile gets old tablet radius
-              : isTablet
-              ? 32.r // Bigger tablet radius
-              : 24.r,
-        ),
+        borderRadius: BorderRadius.circular(getSpacing(16.0, 20.0, 24.0)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.08),
-            blurRadius: isWebMobile ? 25.0 : isMobile ? 30 : isTablet ? 40 : 25,
-            // Enhanced shadows
-            offset: Offset(
-                0, isWebMobile ? 12.0 : isMobile ? 15 : isTablet ? 20 : 12),
+            blurRadius: getSpacing(20.0, 25.0, 30.0),
+            offset: Offset(0, getSpacing(8.0, 12.0, 16.0)),
             spreadRadius: 0,
           ),
           BoxShadow(
             color: Colors.black.withOpacity(0.03),
-            blurRadius: isWebMobile ? 10.0 : isMobile ? 12 : isTablet ? 15 : 12,
+            blurRadius: getSpacing(8.0, 12.0, 16.0),
             offset: const Offset(0, 4),
             spreadRadius: 0,
           ),
@@ -357,66 +355,20 @@ class _LoginScreenState extends State<LoginScreen>
               duration: const Duration(milliseconds: 600),
               child: _buildEnhancedLogo(),
             ),
-            SizedBox(height: isWebMobile
-                ? 32.0
-                : isMobile
-                ? 40.h // Mobile gets old tablet spacing
-                : isTablet
-                ? 56.h // Much bigger tablet spacing
-                : 40.h),
+            SizedBox(height: getSpacing(24.0, 32.0, 40.0)),
             _buildEnhancedEmailField(),
-            SizedBox(height: isWebMobile
-                ? 20.0
-                : isMobile
-                ? 22.h // Increased mobile spacing
-                : isTablet
-                ? 28.h // Much bigger tablet spacing
-                : 20.h),
+            SizedBox(height: getSpacing(16.0, 20.0, 24.0)),
             _buildEnhancedPasswordField(),
-            SizedBox(height: isWebMobile
-                ? 16.0
-                : isMobile
-                ? 18.h // Increased mobile spacing
-                : isTablet
-                ? 24.h // Bigger tablet spacing
-                : 16.h),
+            SizedBox(height: getSpacing(12.0, 16.0, 20.0)),
             _buildRememberAndForgot(),
-            SizedBox(height: isWebMobile
-                ? 28.0
-                : isMobile
-                ? 32.h // Mobile gets old tablet spacing
-                : isTablet
-                ? 44.h // Much bigger tablet spacing
-                : 32.h),
+            SizedBox(height: getSpacing(20.0, 28.0, 36.0)),
             _buildEnhancedLoginButton(),
-            SizedBox(height: isWebMobile
-                ? 20.0
-                : isMobile
-                ? 24.h // Increased mobile spacing
-                : isTablet
-                ? 36.h // Much bigger tablet spacing
-                : 24.h),
+            SizedBox(height: getSpacing(16.0, 20.0, 24.0)),
             _buildEnhancedDivider(),
-            SizedBox(height: isWebMobile
-                ? 20.0
-                : isMobile
-                ? 24.h // Increased mobile spacing
-                : isTablet
-                ? 36.h // Much bigger tablet spacing
-                : 24.h),
+            SizedBox(height: getSpacing(16.0, 20.0, 24.0)),
             _buildGoogleSignInButton(),
-            SizedBox(height: isWebMobile
-                ? 28.0
-                : isMobile
-                ? 32.h // Mobile gets old tablet spacing
-                : isTablet
-                ? 44.h // Much bigger tablet spacing
-                : 32.h),
+            SizedBox(height: getSpacing(20.0, 28.0, 36.0)),
             _buildSignUpSection(),
-            // if (isDesktop) ...[
-            //   SizedBox(height: 24.h),
-            //   _buildAdminSection(),
-            // ],
           ],
         ),
       ),
@@ -428,11 +380,16 @@ class _LoginScreenState extends State<LoginScreen>
         .of(context)
         .size
         .width;
-    final isTablet = screenWidth > 768 &&
-        screenWidth <= 1200; // Updated breakpoint
-    final isMobile = screenWidth <= 768; // Updated breakpoint
-    final isSmallMobile = screenWidth <= 400;
-    final isWebMobile = kIsWeb && screenWidth <= 600;
+
+    // More responsive logo sizing
+    double getLogoSize() {
+      if (screenWidth <= 400) return 70.0;
+      if (screenWidth <= 600) return 85.0;
+      if (screenWidth <= 768) return 95.0;
+      if (screenWidth <= 1024) return 105.0;
+      if (screenWidth <= 1200) return 115.0;
+      return 125.0;
+    }
 
     return AnimatedBuilder(
       animation: _pulseAnimation,
@@ -442,24 +399,8 @@ class _LoginScreenState extends State<LoginScreen>
           child: Column(
             children: [
               Container(
-                width: isWebMobile
-                    ? 90.0
-                    : isSmallMobile
-                    ? 75.w
-                    : isMobile
-                    ? 100.w // Mobile gets bigger logo (old tablet size)
-                    : isTablet
-                    ? 120.w // Much bigger tablet logo
-                    : 90.w,
-                height: isWebMobile
-                    ? 90.0
-                    : isSmallMobile
-                    ? 75.w
-                    : isMobile
-                    ? 100.w // Mobile gets bigger logo
-                    : isTablet
-                    ? 120.w // Much bigger tablet logo
-                    : 90.w,
+                width: getLogoSize(),
+                height: getLogoSize(),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [
@@ -473,90 +414,44 @@ class _LoginScreenState extends State<LoginScreen>
                   boxShadow: [
                     BoxShadow(
                       color: AppTheme.primaryColor.withOpacity(0.3),
-                      blurRadius: isWebMobile
-                          ? 20.0
-                          : isSmallMobile
-                          ? 15
-                          : isMobile
-                          ? 25 // Mobile gets enhanced shadow
-                          : isTablet
-                          ? 30 // Much bigger tablet shadow
-                          : 20,
-                      offset: Offset(0, isWebMobile
-                          ? 8.0
-                          : isSmallMobile
-                          ? 5
-                          : isMobile
-                          ? 10 // Enhanced mobile shadow offset
-                          : isTablet
-                          ? 15 // Much bigger tablet shadow offset
-                          : 8),
+                      blurRadius: getLogoSize() * 0.25,
+                      offset: Offset(0, getLogoSize() * 0.1),
                     ),
                   ],
                 ),
                 child: Icon(
                   FontAwesomeIcons.user,
-                  size: isWebMobile
-                      ? 36.0
-                      : isSmallMobile
-                      ? 28.sp
-                      : isMobile
-                      ? 40.sp // Mobile gets bigger icon (old tablet size)
-                      : isTablet
-                      ? 48.sp // Much bigger tablet icon
-                      : 36.sp,
+                  size: getLogoSize() * 0.4,
                   color: Colors.white,
                 ),
               ),
-              SizedBox(height: isWebMobile
-                  ? 24.0
-                  : isSmallMobile
-                  ? 16.h
-                  : isMobile
-                  ? 24.h // Mobile gets old tablet spacing
-                  : isTablet
-                  ? 32.h // Much bigger tablet spacing
-                  : 20.h),
+              SizedBox(height: 16.0),
               Text(
                 'Welcome Back! ',
-                style: AppTheme.headingStyle.copyWith(
-                  fontSize: isWebMobile
-                      ? 28.0
-                      : isSmallMobile
-                      ? 22.sp
-                      : isMobile
-                      ? 28.sp // Mobile gets old tablet font size
-                      : isTablet
-                      ? 36.sp // Much bigger tablet font
-                      : 28.sp,
+                style: TextStyle(
+                  fontSize: FixedTextSizes.displaySmall,
                   color: AppTheme.primaryColor,
                   fontWeight: FontWeight.w700,
-                ),
-              ),
-              SizedBox(height: isWebMobile
-                  ? 10.0
-                  : isSmallMobile
-                  ? 6.h
-                  : isMobile
-                  ? 10.h // Mobile gets old tablet spacing
-                  : isTablet
-                  ? 14.h // Much bigger tablet spacing
-                  : 8.h),
-              Text(
-                'Sign in to continue your journey',
-                style: AppTheme.bodyStyle.copyWith(
-                  color: Colors.grey[600],
-                  fontSize: isWebMobile
-                      ? 16.0
-                      : isSmallMobile
-                      ? 14.sp
-                      : isMobile
-                      ? 16.sp // Mobile gets old tablet font size
-                      : isTablet
-                      ? 20.sp // Much bigger tablet font
-                      : 16.sp,
+                  letterSpacing: -0.5,
+                  height: 1.2,
                 ),
                 textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              SizedBox(height: 6.0),
+              Text(
+                'Sign in to continue your journey',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: FixedTextSizes.bodyLarge,
+                  fontWeight: FontWeight.w400,
+                  letterSpacing: 0.25,
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
@@ -570,10 +465,14 @@ class _LoginScreenState extends State<LoginScreen>
         .of(context)
         .size
         .width;
-    final isTablet = screenWidth > 768 && screenWidth <= 1200;
-    final isMobile = screenWidth <= 768;
-    final isSmallMobile = screenWidth <= 400;
-    final isWebMobile = kIsWeb && screenWidth <= 600;
+
+    double getFieldHeight() {
+      if (screenWidth <= 400) return 48.0;
+      if (screenWidth <= 600) return 52.0;
+      if (screenWidth <= 768) return 56.0;
+      if (screenWidth <= 1024) return 60.0;
+      return 64.0;
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -581,50 +480,21 @@ class _LoginScreenState extends State<LoginScreen>
         Text(
           'Email Address',
           style: TextStyle(
-            fontSize: isWebMobile
-                ? 15.0
-                : isSmallMobile
-                ? 14.sp
-                : isMobile
-                ? 16.sp // Mobile gets bigger font (old tablet size)
-                : isTablet
-                ? 18.sp // Bigger tablet font
-                : 14.sp,
+            fontSize: FixedTextSizes.labelSmall,
             fontWeight: FontWeight.w600,
             color: Colors.grey[700],
           ),
         ),
-        SizedBox(height: isWebMobile ? 10.0 : isSmallMobile ? 8.h : isMobile
-            ? 12.h
-            : isTablet ? 14.h : 8.h),
+        SizedBox(height: 8.0),
         Container(
-          height: isWebMobile
-              ? 54.0
-              : isSmallMobile
-              ? 50.h
-              : isMobile
-              ? 58.h // Mobile gets bigger height (old tablet size)
-              : isTablet
-              ? 66.h // Much bigger tablet height
-              : 56.h,
+          height: getFieldHeight(),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(
-                isWebMobile
-                    ? 14.0
-                    : isSmallMobile
-                    ? 10.r
-                    : isMobile
-                    ? 16.r // Mobile gets bigger radius (old tablet size)
-                    : isTablet
-                    ? 20.r // Much bigger tablet radius
-                    : 14.r),
+            borderRadius: BorderRadius.circular(12.0),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.08),
-                blurRadius: isWebMobile ? 14.0 : isSmallMobile ? 10 : isMobile
-                    ? 18
-                    : isTablet ? 25 : 15,
+                blurRadius: 15.0,
                 offset: const Offset(0, 4),
               ),
             ],
@@ -639,124 +509,39 @@ class _LoginScreenState extends State<LoginScreen>
               hintText: 'Enter your email',
               hintStyle: TextStyle(
                 color: Colors.grey[400],
-                fontSize: isWebMobile
-                    ? 16.0
-                    : isSmallMobile
-                    ? 15.sp
-                    : isMobile
-                    ? 18.sp // Mobile gets bigger font (old tablet size)
-                    : isTablet
-                    ? 20.sp // Much bigger tablet font
-                    : 16.sp,
+                fontSize: FixedTextSizes.bodySmall,
                 fontWeight: FontWeight.w400,
               ),
               prefixIcon: Container(
-                margin: EdgeInsets.all(
-                    isWebMobile
-                        ? 12.0
-                        : isSmallMobile
-                        ? 8.w
-                        : isMobile
-                        ? 14.w // Mobile gets bigger margins (old tablet size)
-                        : isTablet
-                        ? 16.w // Much bigger tablet margins
-                        : 12.w),
-                padding: EdgeInsets.all(isWebMobile
-                    ? 8.0
-                    : isSmallMobile
-                    ? 6.w
-                    : isMobile
-                    ? 10.w // Mobile gets bigger padding (old tablet size)
-                    : isTablet
-                    ? 12.w // Much bigger tablet padding
-                    : 8.w),
+                margin: const EdgeInsets.all(10.0),
+                padding: const EdgeInsets.all(8.0),
                 decoration: BoxDecoration(
                   color: AppTheme.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(
-                      isWebMobile
-                          ? 8.0
-                          : isSmallMobile
-                          ? 6.r
-                          : isMobile
-                          ? 10.r // Mobile gets bigger radius (old tablet size)
-                          : isTablet
-                          ? 12.r // Much bigger tablet radius
-                          : 8.r),
+                  borderRadius: BorderRadius.circular(8.0),
                 ),
                 child: Icon(
                   FontAwesomeIcons.envelope,
-                  size: isWebMobile
-                      ? 16.0
-                      : isSmallMobile
-                      ? 14.sp
-                      : isMobile
-                      ? 18.sp // Mobile gets bigger icon (old tablet size)
-                      : isTablet
-                      ? 20.sp // Much bigger tablet icon
-                      : 16.sp,
+                  size: FixedTextSizes.bodySmall,
                   color: AppTheme.primaryColor,
                 ),
               ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                    isWebMobile
-                        ? 14.0
-                        : isSmallMobile
-                        ? 10.r
-                        : isMobile
-                        ? 16.r // Mobile gets bigger radius (old tablet size)
-                        : isTablet
-                        ? 20.r // Much bigger tablet radius
-                        : 14.r),
+                borderRadius: BorderRadius.circular(12.0),
                 borderSide: BorderSide.none,
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                    isWebMobile
-                        ? 14.0
-                        : isSmallMobile
-                        ? 10.r
-                        : isMobile
-                        ? 16.r
-                        : isTablet
-                        ? 20.r
-                        : 14.r),
+                borderRadius: BorderRadius.circular(12.0),
                 borderSide: BorderSide.none,
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                    isWebMobile
-                        ? 14.0
-                        : isSmallMobile
-                        ? 10.r
-                        : isMobile
-                        ? 16.r
-                        : isTablet
-                        ? 20.r
-                        : 14.r),
+                borderRadius: BorderRadius.circular(12.0),
                 borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
               ),
               filled: true,
               fillColor: Colors.white,
               contentPadding: EdgeInsets.symmetric(
-                horizontal: isWebMobile
-                    ? 18.0
-                    : isSmallMobile
-                    ? 14.w
-                    : isMobile
-                    ? 22.w // Mobile gets bigger padding (old tablet size)
-                    : isTablet
-                    ? 28.w // Much bigger tablet padding
-                    : 20.w,
-                vertical: isWebMobile
-                    ? 16.0
-                    : isSmallMobile
-                    ? 12.h
-                    : isMobile
-                    ? 18.h // Mobile gets bigger padding (old tablet size)
-                    : isTablet
-                    ? 22.h // Much bigger tablet padding
-                    : 16.h,
+                horizontal: 18.0,
+                vertical: (getFieldHeight() - FixedTextSizes.bodySmall) / 2 - 4,
               ),
             ),
             validator: FormBuilderValidators.compose([
@@ -765,15 +550,7 @@ class _LoginScreenState extends State<LoginScreen>
             ]),
             keyboardType: TextInputType.emailAddress,
             style: TextStyle(
-              fontSize: isWebMobile
-                  ? 16.0
-                  : isSmallMobile
-                  ? 15.sp
-                  : isMobile
-                  ? 18.sp // Mobile gets bigger font (old tablet size)
-                  : isTablet
-                  ? 20.sp // Much bigger tablet font
-                  : 16.sp,
+              fontSize: FixedTextSizes.bodySmall,
               color: Colors.black87,
               fontWeight: FontWeight.w500,
             ),
@@ -788,10 +565,14 @@ class _LoginScreenState extends State<LoginScreen>
         .of(context)
         .size
         .width;
-    final isTablet = screenWidth > 768 && screenWidth <= 1200;
-    final isMobile = screenWidth <= 768;
-    final isSmallMobile = screenWidth <= 400;
-    final isWebMobile = kIsWeb && screenWidth <= 600;
+
+    double getFieldHeight() {
+      if (screenWidth <= 400) return 48.0;
+      if (screenWidth <= 600) return 52.0;
+      if (screenWidth <= 768) return 56.0;
+      if (screenWidth <= 1024) return 60.0;
+      return 64.0;
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -799,50 +580,21 @@ class _LoginScreenState extends State<LoginScreen>
         Text(
           'Password',
           style: TextStyle(
-            fontSize: isWebMobile
-                ? 15.0
-                : isSmallMobile
-                ? 14.sp
-                : isMobile
-                ? 16.sp // Mobile gets bigger font (old tablet size)
-                : isTablet
-                ? 18.sp // Bigger tablet font
-                : 16.sp,
+            fontSize: FixedTextSizes.labelSmall,
             fontWeight: FontWeight.w600,
             color: Colors.grey[700],
           ),
         ),
-        SizedBox(height: isWebMobile ? 10.0 : isSmallMobile ? 8.h : isMobile
-            ? 12.h
-            : isTablet ? 14.h : 8.h),
+        SizedBox(height: 8.0),
         Container(
-          height: isWebMobile
-              ? 54.0
-              : isSmallMobile
-              ? 50.h
-              : isMobile
-              ? 58.h // Mobile gets bigger height (old tablet size)
-              : isTablet
-              ? 66.h // Much bigger tablet height
-              : 56.h,
+          height: getFieldHeight(),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(
-                isWebMobile
-                    ? 14.0
-                    : isSmallMobile
-                    ? 10.r
-                    : isMobile
-                    ? 16.r // Mobile gets bigger radius (old tablet size)
-                    : isTablet
-                    ? 20.r // Much bigger tablet radius
-                    : 14.r),
+            borderRadius: BorderRadius.circular(12.0),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.08),
-                blurRadius: isWebMobile ? 14.0 : isSmallMobile ? 10 : isMobile
-                    ? 18
-                    : isTablet ? 25 : 15,
+                blurRadius: 15.0,
                 offset: const Offset(0, 4),
               ),
             ],
@@ -858,122 +610,37 @@ class _LoginScreenState extends State<LoginScreen>
               hintText: 'Enter your password',
               hintStyle: TextStyle(
                 color: Colors.grey[400],
-                fontSize: isWebMobile
-                    ? 16.0
-                    : isSmallMobile
-                    ? 15.sp
-                    : isMobile
-                    ? 18.sp // Mobile gets bigger font (old tablet size)
-                    : isTablet
-                    ? 20.sp // Much bigger tablet font
-                    : 16.sp,
+                fontSize: FixedTextSizes.bodySmall,
                 fontWeight: FontWeight.w400,
               ),
               prefixIcon: Container(
-                margin: EdgeInsets.all(
-                    isWebMobile
-                        ? 12.0
-                        : isSmallMobile
-                        ? 8.w
-                        : isMobile
-                        ? 14.w // Mobile gets bigger margins (old tablet size)
-                        : isTablet
-                        ? 16.w // Much bigger tablet margins
-                        : 12.w),
-                padding: EdgeInsets.all(isWebMobile
-                    ? 8.0
-                    : isSmallMobile
-                    ? 6.w
-                    : isMobile
-                    ? 10.w // Mobile gets bigger padding (old tablet size)
-                    : isTablet
-                    ? 12.w // Much bigger tablet padding
-                    : 8.w),
+                margin: const EdgeInsets.all(10.0),
+                padding: const EdgeInsets.all(8.0),
                 decoration: BoxDecoration(
                   color: AppTheme.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(
-                      isWebMobile
-                          ? 8.0
-                          : isSmallMobile
-                          ? 6.r
-                          : isMobile
-                          ? 10.r // Mobile gets bigger radius (old tablet size)
-                          : isTablet
-                          ? 12.r // Much bigger tablet radius
-                          : 8.r),
+                  borderRadius: BorderRadius.circular(8.0),
                 ),
                 child: Icon(
                   FontAwesomeIcons.lock,
-                  size: isWebMobile
-                      ? 16.0
-                      : isSmallMobile
-                      ? 14.sp
-                      : isMobile
-                      ? 18.sp // Mobile gets bigger icon (old tablet size)
-                      : isTablet
-                      ? 20.sp // Much bigger tablet icon
-                      : 16.sp,
+                  size: FixedTextSizes.bodySmall,
                   color: AppTheme.primaryColor,
                 ),
               ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                    isWebMobile
-                        ? 14.0
-                        : isSmallMobile
-                        ? 10.r
-                        : isMobile
-                        ? 16.r // Mobile gets bigger radius (old tablet size)
-                        : isTablet
-                        ? 20.r // Much bigger tablet radius
-                        : 14.r),
+                borderRadius: BorderRadius.circular(12.0),
                 borderSide: BorderSide.none,
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                    isWebMobile
-                        ? 14.0
-                        : isSmallMobile
-                        ? 10.r
-                        : isMobile
-                        ? 16.r
-                        : isTablet
-                        ? 20.r
-                        : 14.r),
+                borderRadius: BorderRadius.circular(12.0),
                 borderSide: BorderSide.none,
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(
-                    isWebMobile
-                        ? 14.0
-                        : isSmallMobile
-                        ? 10.r
-                        : isMobile
-                        ? 16.r
-                        : isTablet
-                        ? 20.r
-                        : 14.r),
+                borderRadius: BorderRadius.circular(12.0),
                 borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
               ),
               contentPadding: EdgeInsets.symmetric(
-                horizontal: isWebMobile
-                    ? 18.0
-                    : isSmallMobile
-                    ? 14.w
-                    : isMobile
-                    ? 22.w // Mobile gets bigger padding (old tablet size)
-                    : isTablet
-                    ? 28.w // Much bigger tablet padding
-                    : 20.w,
-                vertical: isWebMobile
-                    ? 16.0
-                    : isSmallMobile
-                    ? 12.h
-                    : isMobile
-                    ? 18.h // Mobile gets bigger padding (old tablet size)
-                    : isTablet
-                    ? 22.h // Much bigger tablet padding
-                    : 16.h,
+                horizontal: 18.0,
+                vertical: (getFieldHeight() - FixedTextSizes.bodySmall) / 2 - 4,
               ),
               filled: true,
               fillColor: Colors.white,
@@ -981,15 +648,7 @@ class _LoginScreenState extends State<LoginScreen>
                 icon: Icon(
                   _obscurePassword ? Icons.visibility : Icons.visibility_off,
                   color: Colors.grey[600],
-                  size: isWebMobile
-                      ? 22.0
-                      : isSmallMobile
-                      ? 18
-                      : isMobile
-                      ? 24 // Mobile gets bigger icon (old tablet size)
-                      : isTablet
-                      ? 28 // Much bigger tablet icon
-                      : 20,
+                  size: FixedTextSizes.bodySmall + 4,
                 ),
                 onPressed: () {
                   setState(() {
@@ -1004,15 +663,7 @@ class _LoginScreenState extends State<LoginScreen>
                   6, errorText: 'Password must be at least 6 characters'),
             ]),
             style: TextStyle(
-              fontSize: isWebMobile
-                  ? 16.0
-                  : isSmallMobile
-                  ? 15.sp
-                  : isMobile
-                  ? 18.sp // Mobile gets bigger font (old tablet size)
-                  : isTablet
-                  ? 20.sp // Much bigger tablet font
-                  : 16.sp,
+              fontSize: FixedTextSizes.bodySmall,
               color: Colors.black87,
               fontWeight: FontWeight.w500,
             ),
@@ -1059,8 +710,7 @@ class _LoginScreenState extends State<LoginScreen>
                   child: Text(
                     'Remember me',
                     style: TextStyle(
-                      fontSize: isSmallScreen ? 14.sp : isMobile ? 16.sp : 14
-                          .sp, // Increased mobile font size
+                      fontSize: FixedTextSizes.labelSmall,
                       color: Colors.grey[600],
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -1104,8 +754,7 @@ class _LoginScreenState extends State<LoginScreen>
                 'Forgot Password?',
                 style: TextStyle(
                   color: AppTheme.primaryColor,
-                  fontSize: isSmallScreen ? 14.sp : isMobile ? 16.sp : 14.sp,
-                  // Increased mobile font size
+                  fontSize: FixedTextSizes.labelSmall,
                   fontWeight: FontWeight.w600,
                 ),
                 overflow: TextOverflow.ellipsis,
@@ -1185,7 +834,7 @@ class _LoginScreenState extends State<LoginScreen>
                 : Text(
               'Sign In',
               style: TextStyle(
-                fontSize: isMobile ? 17.sp : isTablet ? 20.sp : 18.sp,
+                fontSize: FixedTextSizes.buttonLarge,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
                 letterSpacing: 0.5,
@@ -1243,8 +892,8 @@ class _LoginScreenState extends State<LoginScreen>
             ),
             icon: authProvider.isLoading
                 ? SizedBox(
-              height: isMobile ? 18 : isTablet ? 24 : 20,
-              width: isMobile ? 18 : isTablet ? 24 : 20,
+              height: 24,
+              width:24,
               child: CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(Colors.grey[600]!),
                 strokeWidth: 2,
@@ -1252,13 +901,13 @@ class _LoginScreenState extends State<LoginScreen>
             )
                 : Icon(
               FontAwesomeIcons.google,
-              size: isMobile ? 16 : isTablet ? 22 : 18,
+              size: 24,
               color: const Color(0xFFDB4437),
             ),
             label: Text(
               'Continue with Google',
               style: TextStyle(
-                fontSize: isMobile ? 15.sp : isTablet ? 18.sp : 16.sp,
+                fontSize: FixedTextSizes.buttonSmall,
                 fontWeight: FontWeight.w600,
                 color: Colors.black87,
                 letterSpacing: 0.3,
@@ -1298,7 +947,7 @@ class _LoginScreenState extends State<LoginScreen>
               'OR',
               style: TextStyle(
                 color: Colors.grey[600],
-                fontSize: 12.sp,
+                fontSize: FixedTextSizes.labelSmall,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 1,
               ),
@@ -1336,7 +985,7 @@ class _LoginScreenState extends State<LoginScreen>
           "Don't have an account? ",
           style: TextStyle(
             color: Colors.grey[600],
-            fontSize: isMobile ? 26.sp : 15.sp, // Increased mobile font size
+            fontSize: FixedTextSizes.labelSmall,
           ),
         ),
         TextButton(
@@ -1361,7 +1010,7 @@ class _LoginScreenState extends State<LoginScreen>
             'Sign Up',
             style: TextStyle(
               color: AppTheme.primaryColor,
-              fontSize: isMobile ? 27.sp : 15.sp, // Increased mobile font size
+              fontSize: FixedTextSizes.buttonSmall,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -1375,7 +1024,7 @@ class _LoginScreenState extends State<LoginScreen>
       title: Text(
         'Admin Access',
         style: TextStyle(
-          fontSize: 14.sp,
+          fontSize: FixedTextSizes.labelSmall,
           fontWeight: FontWeight.w600,
           color: Colors.grey[600],
         ),
@@ -1417,7 +1066,7 @@ class _LoginScreenState extends State<LoginScreen>
                 Text(
                   'Setup Admin Account',
                   style: TextStyle(
-                    fontSize: 14.sp,
+                    fontSize: FixedTextSizes.buttonSmall,
                     fontWeight: FontWeight.w600,
                     color: Colors.orange[600],
                   ),
@@ -1458,7 +1107,7 @@ class _LoginScreenState extends State<LoginScreen>
                 Text(
                   'Direct Admin Login',
                   style: TextStyle(
-                    fontSize: 14.sp,
+                    fontSize: FixedTextSizes.buttonSmall,
                     fontWeight: FontWeight.w600,
                     color: Colors.green[600],
                   ),
@@ -1531,27 +1180,50 @@ class _LoginScreenState extends State<LoginScreen>
               size: 20.sp,
             ),
             SizedBox(width: 12.w),
-            const Text('Login Failed'),
+            Text(
+              'Login Failed',
+              style: TextStyle(
+                fontSize: FixedTextSizes.labelLarge,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[600],
+              ),
+            ),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Admin login failed. This might be because:'),
+            Text(
+              'Admin login failed. This might be because:',
+              style: TextStyle(
+                fontSize: FixedTextSizes.labelSmall,
+                color: Colors.grey[600],
+              ),
+            ),
             SizedBox(height: 8.h),
-            Text('• Password needs to be reset',
-                style: TextStyle(fontSize: 14.sp)),
-            Text('• Account needs verification',
-                style: TextStyle(fontSize: 14.sp)),
+            Text(
+              '• Password needs to be reset',
+              style: TextStyle(fontSize: FixedTextSizes.labelSmall),
+            ),
+            Text(
+              '• Account needs verification',
+              style: TextStyle(fontSize: FixedTextSizes.labelSmall),
+            ),
             SizedBox(height: 16.h),
-            const Text('Would you like to reset the password?'),
+            Text(
+              'Would you like to reset the password?',
+              style: TextStyle(fontSize: FixedTextSizes.labelSmall),
+            ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: TextStyle(fontSize: FixedTextSizes.labelSmall),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -1565,7 +1237,10 @@ class _LoginScreenState extends State<LoginScreen>
                 borderRadius: BorderRadius.circular(8.r),
               ),
             ),
-            child: const Text('Reset Password'),
+            child: Text(
+              'Reset Password',
+              style: TextStyle(fontSize: FixedTextSizes.labelSmall),
+            ),
           ),
         ],
       ),
@@ -1589,7 +1264,10 @@ class _LoginScreenState extends State<LoginScreen>
                 children: [
                   const CircularProgressIndicator(),
                   SizedBox(width: 16.w),
-                  const Text('Setting up admin account...'),
+                  Text(
+                    'Setting up admin account...',
+                    style: TextStyle(fontSize: FixedTextSizes.labelSmall),
+                  ),
                 ],
               ),
             ),
@@ -1649,14 +1327,24 @@ class _LoginScreenState extends State<LoginScreen>
               size: 20.sp,
             ),
             SizedBox(width: 12.w),
-            const Text('Admin Account Ready'),
+            Text(
+              'Admin Account Ready',
+              style: TextStyle(
+                fontSize: FixedTextSizes.labelLarge,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[600],
+              ),
+            ),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Your admin account is ready!'),
+            Text(
+              'Your admin account is ready!',
+              style: TextStyle(fontSize: FixedTextSizes.labelSmall),
+            ),
             SizedBox(height: 16.h),
             Container(
               padding: EdgeInsets.all(12.w),
@@ -1667,16 +1355,22 @@ class _LoginScreenState extends State<LoginScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Email: ${AdminSetup.adminEmail}',
-                      style: TextStyle(fontSize: 14.sp)),
-                  Text('Password: ${AdminSetup.adminPassword}',
-                      style: TextStyle(fontSize: 14.sp)),
+                  Text(
+                    'Email: ${AdminSetup.adminEmail}',
+                    style: TextStyle(fontSize: FixedTextSizes.labelSmall),
+                  ),
+                  Text(
+                    'Password: ${AdminSetup.adminPassword}',
+                    style: TextStyle(fontSize: FixedTextSizes.labelSmall),
+                  ),
                 ],
               ),
             ),
             SizedBox(height: 16.h),
-            const Text(
-                'The login form has been pre-filled. Tap "Sign In" to access the admin panel.'),
+            Text(
+              'The login form has been pre-filled. Tap "Sign In" to access the admin panel.',
+              style: TextStyle(fontSize: FixedTextSizes.labelSmall),
+            ),
           ],
         ),
         actions: [
@@ -1686,7 +1380,10 @@ class _LoginScreenState extends State<LoginScreen>
               // Send password reset email as backup
               _sendPasswordResetEmail();
             },
-            child: const Text('Reset Password'),
+            child: Text(
+              'Reset Password',
+              style: TextStyle(fontSize: FixedTextSizes.labelSmall),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -1701,7 +1398,10 @@ class _LoginScreenState extends State<LoginScreen>
                 borderRadius: BorderRadius.circular(8.r),
               ),
             ),
-            child: const Text('Login Now'),
+            child: Text(
+              'Login Now',
+              style: TextStyle(fontSize: FixedTextSizes.labelSmall),
+            ),
           ),
         ],
       ),
@@ -1787,7 +1487,9 @@ class _LoginScreenState extends State<LoginScreen>
               size: 16.sp,
             ),
             SizedBox(width: 12.w),
-            Expanded(child: Text(message)),
+            Expanded(child: Text(
+                message,
+                style: TextStyle(fontSize: FixedTextSizes.labelSmall))),
           ],
         ),
         backgroundColor: Colors.red[600],
@@ -1812,7 +1514,9 @@ class _LoginScreenState extends State<LoginScreen>
               size: 16.sp,
             ),
             SizedBox(width: 12.w),
-            Expanded(child: Text(message)),
+            Expanded(child: Text(
+                message,
+                style: TextStyle(fontSize: FixedTextSizes.labelSmall))),
           ],
         ),
         backgroundColor: Colors.green[600],

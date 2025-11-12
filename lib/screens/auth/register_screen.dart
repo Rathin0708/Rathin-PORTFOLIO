@@ -10,6 +10,8 @@ import '../../providers/auth_provider.dart';
 import '../../utils/app_theme.dart';
 import 'login_screen.dart';
 import '../portfolio_screen.dart';
+import '../../utils/constants.dart';
+import '../../utils/fixed_text_sizes.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -286,73 +288,70 @@ class _RegisterScreenState extends State<RegisterScreen>
         .of(context)
         .size
         .width;
-    final isTablet = screenWidth > 768 &&
-        screenWidth <= 1200; // Changed breakpoint from 600 to 768
-    final isDesktop = screenWidth > 1200;
-    final isMobile = screenWidth <=
-        768; // Changed from 600 to 768 - now mobile gets tablet styling
+    final screenHeight = MediaQuery
+        .of(context)
+        .size
+        .height;
+
+    // More granular breakpoints for better responsiveness
     final isSmallMobile = screenWidth <= 400;
-    final isWebMobile = kIsWeb &&
-        screenWidth <= 600; // Keep web mobile detection separate
+    final isMobile = screenWidth > 400 && screenWidth <= 600;
+    final isLargeMobile = screenWidth > 600 && screenWidth <= 768;
+    final isTablet = screenWidth > 768 && screenWidth <= 1024;
+    final isLargeTablet = screenWidth > 1024 && screenWidth <= 1200;
+    final isDesktop = screenWidth > 1200;
+    final isWebMobile = kIsWeb && screenWidth <= 600;
+
+    // Adaptive container width based on screen size
+    double getMaxWidth() {
+      if (isSmallMobile) return screenWidth * 0.95;
+      if (isMobile) return 450.0;
+      if (isLargeMobile) return 500.0;
+      if (isTablet) return 540.0;
+      if (isLargeTablet) return 580.0;
+      return 620.0; // Desktop
+    }
+
+    // Adaptive padding based on screen size
+    double getPadding() {
+      if (isSmallMobile) return 20.0;
+      if (isMobile) return 28.0;
+      if (isLargeMobile) return 32.0;
+      if (isTablet) return 40.0;
+      if (isLargeTablet) return 48.0;
+      return 56.0; // Desktop
+    }
+
+    // Adaptive spacing based on screen size
+    double getSpacing(double small, double medium, double large) {
+      if (isSmallMobile || isMobile) return small;
+      if (isLargeMobile || isTablet) return medium;
+      return large; // Desktop
+    }
 
     return Container(
       constraints: BoxConstraints(
-        maxWidth: isDesktop
-            ? 520.w
-            : isTablet
-            ? 540.w // Increased tablet width from 480w to 540w - much bigger
-            : isWebMobile
-            ? 450.0
-            : isSmallMobile
-            ? screenWidth * 0.95
-            : 500.w, // Mobile now gets 500w (old tablet size)
-        minWidth: isWebMobile
-            ? 420.0
-            : isSmallMobile
-            ? screenWidth * 0.9
-            : 420.w, // Increased mobile minimum
+        maxWidth: getMaxWidth(),
+        minWidth: isSmallMobile ? screenWidth * 0.9 : 400.0,
       ),
       margin: EdgeInsets.symmetric(
-        horizontal: isWebMobile
-            ? 20.0
-            : isMobile
-            ? 20.w // Increased mobile margins for more spacious look
-            : isTablet
-            ? 50.w // Increased tablet margins
-            : 20.w,
+        horizontal: getSpacing(16.0, 24.0, 32.0),
+        vertical: screenHeight < 700 ? 12.0 : 20.0, // Adaptive vertical margin
       ),
-      padding: EdgeInsets.all(
-        isWebMobile
-            ? 32.0
-            : isMobile
-            ? 36.w // Increased mobile padding (old tablet size)
-            : isTablet
-            ? 48.w // Much bigger tablet padding
-            : 32.w,
-      ),
+      padding: EdgeInsets.all(getPadding()),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(
-          isWebMobile
-              ? 20.0
-              : isMobile
-              ? 24.r // Mobile gets old tablet radius
-              : isTablet
-              ? 32.r // Bigger tablet radius
-              : 24.r,
-        ),
+        borderRadius: BorderRadius.circular(getSpacing(16.0, 20.0, 24.0)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.08),
-            blurRadius: isWebMobile ? 25.0 : isMobile ? 30 : isTablet ? 40 : 25,
-            // Enhanced shadows
-            offset: Offset(
-                0, isWebMobile ? 12.0 : isMobile ? 15 : isTablet ? 20 : 12),
+            blurRadius: getSpacing(20.0, 25.0, 30.0),
+            offset: Offset(0, getSpacing(8.0, 12.0, 16.0)),
             spreadRadius: 0,
           ),
           BoxShadow(
             color: Colors.black.withOpacity(0.03),
-            blurRadius: isWebMobile ? 10.0 : isMobile ? 12 : isTablet ? 15 : 12,
+            blurRadius: getSpacing(8.0, 12.0, 16.0),
             offset: const Offset(0, 4),
             spreadRadius: 0,
           ),
@@ -367,49 +366,23 @@ class _RegisterScreenState extends State<RegisterScreen>
               duration: Duration(milliseconds: kIsWeb ? 600 : 400),
               child: _buildEnhancedLogo(),
             ),
-            SizedBox(height: isWebMobile ? 32.0 : isMobile ? 44.h : isTablet
-                ? 56.h
-                : 40.h), // Increased spacing
+            SizedBox(height: getSpacing(20.0, 28.0, 36.0)),
             _buildNameField(),
-            SizedBox(height: isWebMobile ? 18.0 : isMobile ? 22.h : isTablet
-                ? 28.h
-                : 20.h),
-            // Increased spacing
+            SizedBox(height: getSpacing(14.0, 18.0, 22.0)),
             _buildEmailField(),
-            SizedBox(height: isWebMobile ? 18.0 : isMobile ? 22.h : isTablet
-                ? 28.h
-                : 20.h),
-            // Increased spacing
+            SizedBox(height: getSpacing(14.0, 18.0, 22.0)),
             _buildPasswordField(),
-            SizedBox(height: isWebMobile ? 14.0 : isMobile ? 18.h : isTablet
-                ? 24.h
-                : 16.h),
-            // Increased spacing
+            SizedBox(height: getSpacing(12.0, 16.0, 20.0)),
             _buildConfirmPasswordField(),
-            SizedBox(height: isWebMobile ? 18.0 : isMobile ? 22.h : isTablet
-                ? 28.h
-                : 20.h),
-            // Increased spacing
+            SizedBox(height: getSpacing(14.0, 18.0, 22.0)),
             _buildTermsCheckbox(),
-            SizedBox(height: isWebMobile ? 28.0 : isMobile ? 36.h : isTablet
-                ? 48.h
-                : 32.h),
-            // Increased spacing
+            SizedBox(height: getSpacing(20.0, 28.0, 36.0)),
             _buildEnhancedRegisterButton(),
-            SizedBox(height: isWebMobile ? 20.0 : isMobile ? 26.h : isTablet
-                ? 36.h
-                : 24.h),
-            // Increased spacing
+            SizedBox(height: getSpacing(16.0, 20.0, 24.0)),
             _buildEnhancedDivider(),
-            SizedBox(height: isWebMobile ? 20.0 : isMobile ? 26.h : isTablet
-                ? 36.h
-                : 24.h),
-            // Increased spacing
+            SizedBox(height: getSpacing(16.0, 20.0, 24.0)),
             _buildEnhancedGoogleButton(),
-            SizedBox(height: isWebMobile ? 28.0 : isMobile ? 36.h : isTablet
-                ? 48.h
-                : 32.h),
-            // Increased spacing
+            SizedBox(height: getSpacing(20.0, 28.0, 36.0)),
             _buildSignInSection(),
           ],
         ),
@@ -422,11 +395,22 @@ class _RegisterScreenState extends State<RegisterScreen>
         .of(context)
         .size
         .width;
-    final isTablet = screenWidth > 768 &&
-        screenWidth <= 1200; // Updated breakpoint
-    final isMobile = screenWidth <= 768; // Updated breakpoint
-    final isSmallMobile = screenWidth <= 400;
-    final isWebMobile = kIsWeb && screenWidth <= 600;
+
+    // More responsive logo sizing
+    double getLogoSize() {
+      if (screenWidth <= 400) return 75.0;
+      if (screenWidth <= 600) return 90.0;
+      if (screenWidth <= 768) return 100.0;
+      if (screenWidth <= 1024) return 110.0;
+      if (screenWidth <= 1200) return 120.0;
+      return 130.0;
+    }
+
+    double getFontSize(double small, double medium, double large) {
+      if (screenWidth <= 600) return small;
+      if (screenWidth <= 1024) return medium;
+      return large;
+    }
 
     return AnimatedBuilder(
       animation: _pulseAnimation,
@@ -436,24 +420,8 @@ class _RegisterScreenState extends State<RegisterScreen>
           child: Column(
             children: [
               Container(
-                width: isWebMobile
-                    ? 90.0
-                    : isSmallMobile
-                    ? 75.w
-                    : isMobile
-                    ? 105.w // Mobile gets bigger logo (old tablet size)
-                    : isTablet
-                    ? 125.w // Much bigger tablet logo
-                    : 90.w,
-                height: isWebMobile
-                    ? 90.0
-                    : isSmallMobile
-                    ? 75.w
-                    : isMobile
-                    ? 105.w // Mobile gets bigger logo
-                    : isTablet
-                    ? 125.w // Much bigger tablet logo
-                    : 90.w,
+                width: getLogoSize(),
+                height: getLogoSize(),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [
@@ -467,88 +435,33 @@ class _RegisterScreenState extends State<RegisterScreen>
                   boxShadow: [
                     BoxShadow(
                       color: AppTheme.accentColor.withOpacity(0.3),
-                      blurRadius: isWebMobile
-                          ? 20.0
-                          : isSmallMobile
-                          ? 15
-                          : isMobile
-                          ? 28 // Mobile gets enhanced shadow
-                          : isTablet
-                          ? 35 // Much bigger tablet shadow
-                          : 20,
-                      offset: Offset(0, isWebMobile
-                          ? 8.0
-                          : isSmallMobile
-                          ? 5
-                          : isMobile
-                          ? 12 // Enhanced mobile shadow offset
-                          : isTablet
-                          ? 16 // Much bigger tablet shadow offset
-                          : 8),
+                      blurRadius: getLogoSize() * 0.25,
+                      offset: Offset(0, getLogoSize() * 0.1),
                     ),
                   ],
                 ),
                 child: Icon(
                   FontAwesomeIcons.userPlus,
-                  size: isWebMobile
-                      ? 36.0
-                      : isSmallMobile
-                      ? 28.sp
-                      : isMobile
-                      ? 42.sp // Mobile gets bigger icon (old tablet size)
-                      : isTablet
-                      ? 52.sp // Much bigger tablet icon
-                      : 36.sp,
+                  size: getLogoSize() * 0.4,
                   color: Colors.white,
                 ),
               ),
-              SizedBox(height: isWebMobile
-                  ? 24.0
-                  : isSmallMobile
-                  ? 16.h
-                  : isMobile
-                  ? 26.h // Mobile gets bigger spacing (old tablet size)
-                  : isTablet
-                  ? 34.h // Much bigger tablet spacing
-                  : 20.h),
+              SizedBox(height: getFontSize(16.0, 20.0, 24.0)),
               Text(
-                'Create Account ✨',
+                'Create Account ',
                 style: AppTheme.headingStyle.copyWith(
-                  fontSize: isWebMobile
-                      ? 28.0
-                      : isSmallMobile
-                      ? 22.sp
-                      : isMobile
-                      ? 30.sp // Mobile gets bigger font (old tablet size)
-                      : isTablet
-                      ? 38.sp // Much bigger tablet font
-                      : 28.sp,
+                  fontSize: getFontSize(26.0, 30.0, 34.0),
                   color: AppTheme.primaryColor,
                   fontWeight: FontWeight.w700,
                 ),
+                textAlign: TextAlign.center,
               ),
-              SizedBox(height: isWebMobile
-                  ? 10.0
-                  : isSmallMobile
-                  ? 6.h
-                  : isMobile
-                  ? 12.h // Mobile gets bigger spacing (old tablet size)
-                  : isTablet
-                  ? 16.h // Much bigger tablet spacing
-                  : 8.h),
+              SizedBox(height: getFontSize(6.0, 8.0, 10.0)),
               Text(
                 'Join our community today',
                 style: AppTheme.bodyStyle.copyWith(
                   color: Colors.grey[600],
-                  fontSize: isWebMobile
-                      ? 16.0
-                      : isSmallMobile
-                      ? 14.sp
-                      : isMobile
-                      ? 17.sp // Mobile gets bigger font (old tablet size)
-                      : isTablet
-                      ? 21.sp // Much bigger tablet font
-                      : 16.sp,
+                  fontSize: getFontSize(14.0, 16.0, 18.0),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -574,7 +487,9 @@ class _RegisterScreenState extends State<RegisterScreen>
         Text(
           'Full Name',
           style: TextStyle(
-            fontSize: isMobile ? 15.sp : isTablet ? 16.sp : 14.sp,
+            fontSize: isMobile ? FixedTextSizes.fieldLabel : isTablet
+                ? FixedTextSizes.fieldLabel
+                : FixedTextSizes.fieldLabel,
             fontWeight: FontWeight.w600,
             color: Colors.grey[700],
           ),
@@ -601,7 +516,9 @@ class _RegisterScreenState extends State<RegisterScreen>
           child: FormBuilderTextField(
             name: 'name',
             style: TextStyle(
-              fontSize: isMobile ? 16.sp : isTablet ? 18.sp : 16.sp,
+              fontSize: isMobile ? FixedTextSizes.bodyText : isTablet
+                  ? FixedTextSizes.bodyText
+                  : FixedTextSizes.bodyText,
               fontWeight: FontWeight.w500,
               color: Colors.black87,
             ),
@@ -609,7 +526,9 @@ class _RegisterScreenState extends State<RegisterScreen>
               hintText: 'Enter your full name',
               hintStyle: TextStyle(
                 color: Colors.grey[400],
-                fontSize: isMobile ? 16.sp : isTablet ? 18.sp : 16.sp,
+                fontSize: isMobile ? FixedTextSizes.bodyText : isTablet
+                    ? FixedTextSizes.bodyText
+                    : FixedTextSizes.bodyText,
                 fontWeight: FontWeight.w400,
               ),
               prefixIcon: Container(
@@ -680,7 +599,9 @@ class _RegisterScreenState extends State<RegisterScreen>
         Text(
           'Email Address',
           style: TextStyle(
-            fontSize: isMobile ? 15.sp : isTablet ? 16.sp : 14.sp,
+            fontSize: isMobile ? FixedTextSizes.fieldLabel : isTablet
+                ? FixedTextSizes.fieldLabel
+                : FixedTextSizes.fieldLabel,
             fontWeight: FontWeight.w600,
             color: Colors.grey[700],
           ),
@@ -708,7 +629,9 @@ class _RegisterScreenState extends State<RegisterScreen>
             name: 'email',
             keyboardType: TextInputType.emailAddress,
             style: TextStyle(
-              fontSize: isMobile ? 16.sp : isTablet ? 18.sp : 16.sp,
+              fontSize: isMobile ? FixedTextSizes.bodyText : isTablet
+                  ? FixedTextSizes.bodyText
+                  : FixedTextSizes.bodyText,
               fontWeight: FontWeight.w500,
               color: Colors.black87,
             ),
@@ -716,7 +639,9 @@ class _RegisterScreenState extends State<RegisterScreen>
               hintText: 'Enter your email',
               hintStyle: TextStyle(
                 color: Colors.grey[400],
-                fontSize: isMobile ? 16.sp : isTablet ? 18.sp : 16.sp,
+                fontSize: isMobile ? FixedTextSizes.bodyText : isTablet
+                    ? FixedTextSizes.bodyText
+                    : FixedTextSizes.bodyText,
                 fontWeight: FontWeight.w400,
               ),
               prefixIcon: Container(
@@ -786,7 +711,7 @@ class _RegisterScreenState extends State<RegisterScreen>
         Text(
           'Password',
           style: TextStyle(
-            fontSize: isTablet ? 16.sp : 14.sp,
+            fontSize: FixedTextSizes.fieldLabel,
             fontWeight: FontWeight.w600,
             color: Colors.grey[700],
           ),
@@ -810,7 +735,7 @@ class _RegisterScreenState extends State<RegisterScreen>
             obscureText: _obscurePassword,
             onChanged: (value) => _checkPasswordStrength(value ?? ''),
             style: TextStyle(
-              fontSize: isTablet ? 18.sp : 16.sp,
+              fontSize: FixedTextSizes.bodyText,
               fontWeight: FontWeight.w500,
               color: Colors.black87,
             ),
@@ -818,7 +743,7 @@ class _RegisterScreenState extends State<RegisterScreen>
               hintText: 'Create a strong password',
               hintStyle: TextStyle(
                 color: Colors.grey[400],
-                fontSize: isTablet ? 18.sp : 16.sp,
+                fontSize: FixedTextSizes.bodyText,
                 fontWeight: FontWeight.w400,
               ),
               border: OutlineInputBorder(
@@ -908,7 +833,7 @@ class _RegisterScreenState extends State<RegisterScreen>
             Text(
               _passwordStrength,
               style: TextStyle(
-                fontSize: 12.sp,
+                fontSize: FixedTextSizes.bodyTextSmall,
                 fontWeight: FontWeight.w600,
                 color: _passwordStrengthColor,
               ),
@@ -919,7 +844,7 @@ class _RegisterScreenState extends State<RegisterScreen>
         Text(
           'Password must contain: uppercase, lowercase, number, and be 8+ characters',
           style: TextStyle(
-            fontSize: 12.sp,
+            fontSize: FixedTextSizes.bodyTextSmall,
             color: Colors.grey[600],
           ),
         ),
@@ -941,7 +866,7 @@ class _RegisterScreenState extends State<RegisterScreen>
         Text(
           'Confirm Password',
           style: TextStyle(
-            fontSize: isTablet ? 16.sp : 14.sp,
+            fontSize: FixedTextSizes.fieldLabel,
             fontWeight: FontWeight.w600,
             color: Colors.grey[700],
           ),
@@ -964,7 +889,7 @@ class _RegisterScreenState extends State<RegisterScreen>
             name: 'confirmPassword',
             obscureText: _obscureConfirmPassword,
             style: TextStyle(
-              fontSize: isTablet ? 18.sp : 16.sp,
+              fontSize: FixedTextSizes.bodyText,
               fontWeight: FontWeight.w500,
               color: Colors.black87,
             ),
@@ -972,7 +897,7 @@ class _RegisterScreenState extends State<RegisterScreen>
               hintText: 'Confirm your password',
               hintStyle: TextStyle(
                 color: Colors.grey[400],
-                fontSize: isTablet ? 18.sp : 16.sp,
+                fontSize: FixedTextSizes.bodyText,
                 fontWeight: FontWeight.w400,
               ),
               border: OutlineInputBorder(
@@ -1069,7 +994,11 @@ class _RegisterScreenState extends State<RegisterScreen>
               child: RichText(
                 text: TextSpan(
                   style: TextStyle(
-                    fontSize: isSmallScreen ? 14.sp : isMobile ? 16.sp : 14.sp,
+                    fontSize: isSmallScreen
+                        ? FixedTextSizes.bodyTextSmall
+                        : isMobile
+                        ? FixedTextSizes.bodyTextSmall
+                        : FixedTextSizes.bodyTextSmall,
                     color: Colors.grey[600],
                     height: 1.3,
                   ),
@@ -1172,7 +1101,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                 : Text(
                     'Create Account',
                     style: TextStyle(
-                      fontSize: isMobile ? 17.sp : isTablet ? 20.sp : 18.sp,
+                      fontSize: FixedTextSizes.button,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
                       letterSpacing: 0.5,
@@ -1212,7 +1141,7 @@ class _RegisterScreenState extends State<RegisterScreen>
               'OR',
               style: TextStyle(
                 color: Colors.grey[600],
-                fontSize: 12.sp,
+                fontSize: FixedTextSizes.bodyTextSmall,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 1,
               ),
@@ -1298,7 +1227,7 @@ class _RegisterScreenState extends State<RegisterScreen>
             label: Text(
               'Continue with Google',
               style: TextStyle(
-                fontSize: isMobile ? 15.sp : isTablet ? 18.sp : 16.sp,
+                fontSize: FixedTextSizes.button,
                 fontWeight: FontWeight.w600,
                 color: Colors.black87,
                 letterSpacing: 0.3,
@@ -1324,7 +1253,7 @@ class _RegisterScreenState extends State<RegisterScreen>
           "Already have an account? ",
           style: TextStyle(
             color: Colors.grey[600],
-            fontSize: isMobile ? 16.sp : 15.sp, // Increased mobile font size
+            fontSize: FixedTextSizes.bodyTextSmall,
           ),
         ),
         TextButton(
@@ -1351,7 +1280,7 @@ class _RegisterScreenState extends State<RegisterScreen>
             'Sign In',
             style: TextStyle(
               color: AppTheme.primaryColor,
-              fontSize: isMobile ? 17.sp : 15.sp, // Increased mobile font size
+              fontSize: FixedTextSizes.button,
               fontWeight: FontWeight.w700,
             ),
           ),
