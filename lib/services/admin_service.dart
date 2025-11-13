@@ -286,4 +286,71 @@ class AdminService {
       print('Error logging admin action: $e');
     }
   }
+
+  // One-time cleanup for invalid profile image references
+  static Future<bool> forceCleanupProfileImages() async {
+    try {
+      print('🧹 Starting force cleanup of profile images...');
+
+      // Get current profile settings
+      final doc = await _firestore
+          .collection('portfolio_settings')
+          .doc('profile')
+          .get();
+
+      if (doc.exists && doc.data() != null) {
+        final data = doc.data()!;
+        final currentImage = data['profileImage'] as String?;
+
+        if (currentImage != null) {
+          // Check if current image is invalid
+          if (currentImage.contains('profile1.jpg') ||
+              currentImage.contains('profile2.jpg') ||
+              currentImage.contains('profile3.jpg') ||
+              currentImage.contains('profile4.jpg')) {
+            print('🔧 Found invalid profile image: $currentImage');
+
+            // Replace with valid alternative
+            await _firestore
+                .collection('portfolio_settings')
+                .doc('profile')
+                .set({
+              'profileImage': 'assets/images/profile.jpg',
+              'updatedAt': FieldValue.serverTimestamp(),
+              'updatedBy': 'force_cleanup',
+              'source': 'local_assets',
+              'cleanupPerformed': true,
+              'previousInvalidImage': currentImage,
+            }, SetOptions(merge: true));
+
+            print(
+                '✅ Force cleanup completed - Updated to: assets/images/profile.jpg');
+            return true;
+          } else {
+            print('✅ Profile image is already valid: $currentImage');
+            return true;
+          }
+        }
+      }
+
+      // Set default if no profile data exists
+      await _firestore
+          .collection('portfolio_settings')
+          .doc('profile')
+          .set({
+        'profileImage': 'assets/images/profiles/default_avatar.png',
+        'updatedAt': FieldValue.serverTimestamp(),
+        'updatedBy': 'force_cleanup',
+        'source': 'local_assets',
+        'cleanupPerformed': true,
+        'initialSetup': true,
+      }, SetOptions(merge: true));
+
+      print('✅ Set default profile image');
+      return true;
+    } catch (e) {
+      print('❌ Error during force cleanup: $e');
+      return false;
+    }
+  }
 }

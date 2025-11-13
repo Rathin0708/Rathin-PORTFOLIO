@@ -256,7 +256,18 @@ class _HeroSectionState extends State<HeroSection>
               final name = profileData?['name'] ?? AppConstants.name;
               final tagline = profileData?['tagline'] ?? AppConstants.tagline;
               final bio = aboutData?['bio'] ?? AppConstants.bio;
-              final profileImage = profileData?['profileImage'] ?? '';
+
+              // Fix invalid profile image references directly
+              String profileImage = profileData?['profileImage'] ?? '';
+              if (profileImage.contains('profile1.jpg') ||
+                  profileImage.contains('profile2.jpg') ||
+                  profileImage.contains('profile3.jpg') ||
+                  profileImage.contains('profile4.jpg')) {
+                // Replace with valid existing asset
+                profileImage = 'assets/images/profile.jpg';
+                print(
+                    '🔧 Fixed invalid profile image reference in hero section');
+              }
 
               return Responsive.responsiveWidget(
                 context: context,

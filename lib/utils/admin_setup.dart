@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/admin_service.dart';
 
 class AdminSetup {
   static const String adminEmail = 'rathin007008@gmail.com';
@@ -123,7 +124,15 @@ class AdminSetup {
       
       // Try to create admin account
       await createAdminAccount();
-      
+
+      // Perform automatic cleanup of invalid profile images
+      print('🧹 Running automatic cleanup of profile images...');
+      try {
+        await AdminService.forceCleanupProfileImages();
+        print('✅ Profile image cleanup completed during initialization');
+      } catch (e) {
+        print('⚠️ Minor issue during profile image cleanup: $e');
+      }
     } catch (e) {
       print('❌ Error initializing admin setup: $e');
     }

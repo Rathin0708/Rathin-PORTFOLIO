@@ -50,7 +50,19 @@ class AboutSection extends StatelessWidget {
                       AppConstants.tagline;
                   final location = profileData?['location'] ??
                       AppConstants.location;
-                  final profileImage = profileData?['profileImage'] ?? '';
+
+                  // Fix invalid profile image references directly
+                  String profileImage = profileData?['profileImage'] ?? '';
+                  if (profileImage.contains('profile1.jpg') ||
+                      profileImage.contains('profile2.jpg') ||
+                      profileImage.contains('profile3.jpg') ||
+                      profileImage.contains('profile4.jpg')) {
+                    // Replace with valid existing asset
+                    profileImage = 'assets/images/profile.jpg';
+                    print(
+                        '🔧 Fixed invalid profile image reference in about section');
+                  }
+
                   final bio = aboutData?['bio'] ?? AppConstants.bio;
                   final skills = aboutData?['skills'] != null
                       ? List<String>.from(aboutData!['skills'])

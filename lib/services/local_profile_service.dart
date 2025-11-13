@@ -5,12 +5,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class LocalProfileService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // List of available profile avatars in assets
+  // List of available profile avatars in assets (only existing files)
   static const List<String> availableAvatars = [
-    'assets/images/profiles/profile1.jpg',
-    'assets/images/profiles/profile2.jpg',
-    'assets/images/profiles/profile3.jpg',
-    'assets/images/profiles/profile4.jpg',
+    'assets/images/profile.jpg',
+    'assets/images/me.jpg',
     'assets/images/profiles/default_avatar.png',
   ];
 
@@ -32,6 +30,49 @@ class LocalProfileService {
         // Validate if the avatar exists in our available list
         if (availableAvatars.contains(profileImage)) {
           return profileImage;
+        }
+
+        // If the stored image doesn't exist, check if it's one of the old references
+        if (profileImage.contains('profile1.jpg') ||
+            profileImage.contains('profile2.jpg') ||
+            profileImage.contains('profile3.jpg') ||
+            profileImage.contains('profile4.jpg')) {
+          // Immediately update Firestore with valid alternative
+          print(
+              '🔧 Found invalid reference: $profileImage - Fixing immediately...');
+          await _firestore
+              .collection('portfolio_settings')
+              .doc('profile')
+              .set({
+            'profileImage': 'assets/images/profile.jpg',
+            'updatedAt': FieldValue.serverTimestamp(),
+            'updatedBy': 'auto_cleanup',
+            'source': 'local_assets',
+            'previousInvalidImage': profileImage,
+            // Keep track of what was fixed
+          }, SetOptions(merge: true));
+
+          print('✅ Automatically fixed invalid profile image reference');
+          return 'assets/images/profile.jpg';
+        }
+
+        // For any other invalid references, use default
+        if (!availableAvatars.contains(profileImage)) {
+          print(
+              '🔧 Found unknown invalid reference: $profileImage - Setting to default...');
+          await _firestore
+              .collection('portfolio_settings')
+              .doc('profile')
+              .set({
+            'profileImage': defaultAvatar,
+            'updatedAt': FieldValue.serverTimestamp(),
+            'updatedBy': 'auto_cleanup',
+            'source': 'local_assets',
+            'previousInvalidImage': profileImage,
+          }, SetOptions(merge: true));
+
+          print('✅ Set invalid reference to default avatar');
+          return defaultAvatar;
         }
       }
 
@@ -76,16 +117,12 @@ class LocalProfileService {
   /// Get avatar display name for UI
   static String getAvatarDisplayName(String avatarPath) {
     switch (avatarPath) {
-      case 'assets/images/profiles/profile1.jpg':
+      case 'assets/images/profile.jpg':
         return 'Professional';
-      case 'assets/images/profiles/profile2.jpg':
-        return 'Casual';
-      case 'assets/images/profiles/profile3.jpg':
-        return 'Modern';
-      case 'assets/images/profiles/profile4.jpg':
-        return 'Creative';
+      case 'assets/images/me.jpg':
+        return 'Personal';
       case 'assets/images/profiles/default_avatar.png':
-        return 'Default';
+        return 'Default Avatar';
       default:
         return 'Custom';
     }
@@ -94,5 +131,24 @@ class LocalProfileService {
   /// Reset to default avatar
   static Future<bool> resetToDefault() async {
     return await updateProfileImage(defaultAvatar);
+  }
+
+  /// Clean up any invalid profile image references in Firestore
+  static Future<bool> cleanupInvalidReferences() async {
+    try {
+      final currentImage = await getCurrentProfileImage();
+
+      // If current image is valid, no cleanup needed
+      if (availableAvatars.contains(currentImage)) {
+        return true;
+      }
+
+      // Set to default if current reference is invalid
+      print('🧹 Cleaning up invalid profile image reference: $currentImage');
+      return await resetToDefault();
+    } catch (e) {
+      print('❌ Error during cleanup: $e');
+      return false;
+    }
   }
 }

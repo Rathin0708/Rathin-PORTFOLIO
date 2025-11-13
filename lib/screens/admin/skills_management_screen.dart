@@ -447,15 +447,37 @@ class _SkillsManagementScreenState extends State<SkillsManagementScreen>
     if (_formKey.currentState?.saveAndValidate() ?? false) {
       final formData = _formKey.currentState!.value;
 
+      List<String> tagsList = <String>[];
+      final tagsInput = formData['tags'];
+
+      if (tagsInput != null && tagsInput
+          .toString()
+          .isNotEmpty) {
+        if (tagsInput is String) {
+          tagsList = tagsInput
+              .split(',')
+              .map((tag) => tag.trim())
+              .where((tag) => tag.isNotEmpty)
+              .toList();
+        } else if (tagsInput is List) {
+          tagsList = tagsInput
+              .map((tag) => tag.toString().trim())
+              .where((tag) => tag.isNotEmpty)
+              .toList();
+        }
+      }
+
       final skill = SkillModel(
         id: existingSkill?.id,
-        name: formData['name'],
-        category: formData['category'],
-        proficiency: formData['proficiency'],
-        description: formData['description']?.isEmpty == true ? null : formData['description'],
-        tags: formData['tags']?.isEmpty == true
-            ? <String>[]
-            : formData['tags'].split(',').map((tag) => tag.trim()).toList(),
+        name: formData['name'] as String,
+        category: formData['category'] as String,
+        proficiency: (formData['proficiency'] as num).round(),
+        description: formData['description']
+            ?.toString()
+            .isEmpty == true
+            ? null
+            : formData['description']?.toString(),
+        tags: tagsList,
         createdAt: existingSkill?.createdAt ?? DateTime.now(),
         updatedAt: DateTime.now(),
       );

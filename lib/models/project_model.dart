@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class ProjectModel {
   final String id;
   final String title;
@@ -22,6 +24,22 @@ class ProjectModel {
   });
 
   factory ProjectModel.fromJson(Map<String, dynamic> json) {
+    DateTime? parsedCreatedAt;
+
+    // Handle both Timestamp and String types for createdAt
+    if (json['createdAt'] != null) {
+      if (json['createdAt'] is Timestamp) {
+        parsedCreatedAt = (json['createdAt'] as Timestamp).toDate();
+      } else if (json['createdAt'] is String) {
+        try {
+          parsedCreatedAt = DateTime.parse(json['createdAt']);
+        } catch (e) {
+          print('Error parsing createdAt string: $e');
+          parsedCreatedAt = null;
+        }
+      }
+    }
+
     return ProjectModel(
       id: json['id'] ?? '',
       title: json['title'] ?? '',
@@ -31,9 +49,7 @@ class ProjectModel {
       liveUrl: json['liveUrl'],
       githubUrl: json['githubUrl'],
       isFeatured: json['isFeatured'] ?? false,
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
-          : null,
+      createdAt: parsedCreatedAt,
     );
   }
 

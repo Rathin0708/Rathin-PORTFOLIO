@@ -318,43 +318,55 @@ class _AdminDashboardState extends State<AdminDashboard>
           ),
         ),
         const SizedBox(height: 16),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: 2.2, // Increased from 1.8 to 2.2 to reduce height further
-          children: [
-            _buildAnalyticsCard(
-              'Total Users',
-              _analytics!.totalUsers.toString(),
-              Icons.people,
-              Colors.blue,
-              delay: 1000,
-            ),
-            _buildAnalyticsCard(
-              'Total Contacts',
-              _analytics!.totalContacts.toString(),
-              Icons.contact_mail,
-              Colors.green,
-              delay: 1200,
-            ),
-            _buildAnalyticsCard(
-              'Google Users',
-              '${_analytics!.googleUsers} (${_analytics!.googleUserPercentage.toStringAsFixed(1)}%)',
-              Icons.g_mobiledata,
-              Colors.red,
-              delay: 1400,
-            ),
-            _buildAnalyticsCard(
-              'Recent Activity',
-              '${_analytics!.recentUsers} users, ${_analytics!.recentContacts} contacts',
-              Icons.trending_up,
-              Colors.orange,
-              delay: 1600,
-            ),
-          ],
+        LayoutBuilder(
+          builder: (context, constraints) {
+            // Use single column on very small screens, 2 columns on mobile+
+            final crossAxisCount = constraints.maxWidth < 400 ? 1 : 2;
+            final childAspectRatio = constraints.maxWidth < 400
+                ? 2.5
+                : 2.4; // Increased height for better text display
+
+            return GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: crossAxisCount,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: childAspectRatio,
+              children: [
+                _buildAnalyticsCard(
+                  'Total Users',
+                  _analytics!.totalUsers.toString(),
+                  Icons.people,
+                  Colors.blue,
+                  delay: 1000,
+                ),
+                _buildAnalyticsCard(
+                  'Total Contacts',
+                  _analytics!.totalContacts.toString(),
+                  Icons.contact_mail,
+                  Colors.green,
+                  delay: 1200,
+                ),
+                _buildAnalyticsCard(
+                  'Google Users',
+                  '${_analytics!.googleUsers} (${_analytics!
+                      .googleUserPercentage.toStringAsFixed(1)}%)',
+                  Icons.g_mobiledata,
+                  Colors.red,
+                  delay: 1400,
+                ),
+                _buildAnalyticsCard(
+                  'Recent Activity',
+                  '${_analytics!.recentUsers} users, ${_analytics!
+                      .recentContacts} contacts',
+                  Icons.trending_up,
+                  Colors.orange,
+                  delay: 1600,
+                ),
+              ],
+            );
+          },
         ),
       ],
     );
@@ -371,7 +383,7 @@ class _AdminDashboardState extends State<AdminDashboard>
       duration: const Duration(milliseconds: 800),
       delay: Duration(milliseconds: delay),
       child: Container(
-        padding: const EdgeInsets.all(12), // Reduced from 20 to 12
+        padding: const EdgeInsets.all(16), // Increased from 12 to 16
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -385,41 +397,43 @@ class _AdminDashboardState extends State<AdminDashboard>
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min, // Added to prevent overflow
+          mainAxisSize: MainAxisSize.min,
           children: [
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(6), // Reduced from 8 to 6
+                  padding: const EdgeInsets.all(8), // Increased from 6 to 8
                   decoration: BoxDecoration(
                     color: color.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(icon, color: color, size: 16), // Reduced from 20 to 16
+                  child: Icon(
+                      icon, color: color, size: 20), // Increased from 16 to 20
                 ),
                 const Spacer(),
-                Icon(Icons.more_vert, color: Colors.grey[400], size: 14), // Reduced from 16 to 14
+                Icon(Icons.more_vert, color: Colors.grey[400], size: 16),
+                // Kept same size
               ],
             ),
-            const SizedBox(height: 8), // Reduced from 12 to 8
-            Flexible( // Added Flexible to prevent overflow
-              child: Text(
-                title,
-                style: AppTheme.bodyStyle.copyWith(
-                  color: Colors.grey[600],
-                  fontSize: 10, // Reduced from 12 to 10
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+            const SizedBox(height: 12), // Increased from 8 to 12
+            Text(
+              title,
+              style: AppTheme.bodyStyle.copyWith(
+                color: Colors.grey[600],
+                fontSize: 12, // Increased from 10 to 12
+                fontWeight: FontWeight.w500,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 2), // Reduced from 4 to 2
-            Flexible( // Added Flexible to prevent overflow
+            const SizedBox(height: 4), // Increased from 2 to 4
+            Flexible(
               child: Text(
                 value,
                 style: AppTheme.headingStyle.copyWith(
-                  fontSize: 14, // Reduced from 16 to 14
+                  fontSize: 16, // Increased from 14 to 16
                   color: AppTheme.primaryColor,
+                  fontWeight: FontWeight.bold,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -470,6 +484,36 @@ class _AdminDashboardState extends State<AdminDashboard>
             ),
           ],
         ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _buildQuickActionButton(
+                'Fix Profile Images',
+                Icons.healing,
+                Colors.orange,
+                    () => _forceCleanupProfileImages(),
+                delay: 2400,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildQuickActionButton(
+                'View Portfolio',
+                Icons.visibility,
+                Colors.purple,
+                    () =>
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PortfolioScreen(),
+                      ),
+                    ),
+                delay: 2600,
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -487,7 +531,7 @@ class _AdminDashboardState extends State<AdminDashboard>
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(16), // Reduced from 20 to 16
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
@@ -501,29 +545,27 @@ class _AdminDashboardState extends State<AdminDashboard>
             ],
           ),
           child: Column(
-            mainAxisSize: MainAxisSize.min, // Added to prevent overflow
+            mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                padding: const EdgeInsets.all(10), // Reduced from 12 to 10
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: color, size: 20), // Reduced from 24 to 20
+                child: Icon(icon, color: color, size: 24),
               ),
-              const SizedBox(height: 8), // Reduced from 12 to 8
-              Flexible( // Added Flexible to prevent overflow
-                child: Text(
-                  title,
-                  style: AppTheme.bodyStyle.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.primaryColor,
-                    fontSize: 12, // Added explicit font size
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
+              const SizedBox(height: 12),
+              Text(
+                title,
+                style: AppTheme.bodyStyle.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.primaryColor,
+                  fontSize: 14,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
               ),
             ],
           ),
@@ -548,88 +590,95 @@ class _AdminDashboardState extends State<AdminDashboard>
           ),
         ),
         const SizedBox(height: 16),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 3,
-          // Changed from 2 to 3 for better layout
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: 1.2,
-          // Adjusted for 3-column layout
-          children: [
-            _buildManagementCard(
-              'Users',
-              'Manage user accounts',
-              Icons.people_outline,
-              Colors.blue,
-              () => _navigateToUsersManagement(),
-              delay: 2600,
-            ),
-            _buildManagementCard(
-              'Skills',
-              'Add & edit skills',
-              Icons.star_outline,
-              Colors.orange,
-              () => _navigateToSkillsManagement(),
-              delay: 2800,
-            ),
-            _buildManagementCard(
-              'Certificates',
-              'Manage certificates',
-              Icons.card_membership_outlined,
-              Colors.green,
-              () => _navigateToCertificatesManagement(),
-              delay: 3000,
-            ),
-            _buildManagementCard(
-              'Contacts',
-              'View messages',
-              Icons.contact_mail_outlined,
-              Colors.purple,
-              () => _navigateToContactsManagement(),
-              delay: 3200,
-            ),
-            _buildManagementCard(
-              'About',
-              'Manage about section',
-              Icons.info,
-              Colors.pink,
+        // Use MediaQuery to determine if we should use 2 or 3 columns
+        LayoutBuilder(
+          builder: (context, constraints) {
+            // Use 2 columns on mobile (width < 600), 3 on tablet+
+            final crossAxisCount = constraints.maxWidth < 600 ? 2 : 3;
+            final childAspectRatio = constraints.maxWidth < 600 ? 1.0 : 1.2;
+
+            return GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: crossAxisCount,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: childAspectRatio,
+              children: [
+                _buildManagementCard(
+                  'Users',
+                  'Manage user accounts',
+                  Icons.people_outline,
+                  Colors.blue,
+                      () => _navigateToUsersManagement(),
+                  delay: 2600,
+                ),
+                _buildManagementCard(
+                  'Skills',
+                  'Add & edit skills',
+                  Icons.star_outline,
+                  Colors.orange,
+                      () => _navigateToSkillsManagement(),
+                  delay: 2800,
+                ),
+                _buildManagementCard(
+                  'Certificates',
+                  'Manage certificates',
+                  Icons.card_membership_outlined,
+                  Colors.green,
+                      () => _navigateToCertificatesManagement(),
+                  delay: 3000,
+                ),
+                _buildManagementCard(
+                  'Contacts',
+                  'View messages',
+                  Icons.contact_mail_outlined,
+                  Colors.purple,
+                      () => _navigateToContactsManagement(),
+                  delay: 3200,
+                ),
+                _buildManagementCard(
+                  'About',
+                  'Manage about section',
+                  Icons.info,
+                  Colors.pink,
                   () => _navigateToAboutManagement(),
-              delay: 3400,
-            ),
-            _buildManagementCard(
-              'Profile',
-              'Manage profile section',
-              Icons.person,
-              Colors.teal,
+                  delay: 3400,
+                ),
+                _buildManagementCard(
+                  'Profile',
+                  'Manage profile section',
+                  Icons.person,
+                  Colors.teal,
                   () => _navigateToProfileManagement(),
-              delay: 3600,
-            ),
-            _buildManagementCard(
-              'Projects',
-              'Manage projects section',
-              Icons.folder,
-              Colors.brown,
+                  delay: 3600,
+                ),
+                _buildManagementCard(
+                  'Projects',
+                  'Manage projects section',
+                  Icons.folder,
+                  Colors.brown,
                   () => _navigateToProjectsManagement(),
-              delay: 3800,
-            ),
-            _buildManagementCard(
-              'Local Profile',
-              'Manage local profile',
-              Icons.account_circle,
-              Colors.purple,
-                  () =>
-                  Navigator.push(
+                  delay: 3800,
+                ),
+                _buildManagementCard(
+                  'Local Profile',
+                  'Manage local profile',
+                  Icons.account_circle,
+                  Colors.purple,
+                      () =>
+                      Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (
                           context) => const LocalProfileManagementScreen(),
                     ),
                   ),
-              delay: 4000,
-            ),
-          ],
+                  delay: 4000,
+                ),
+              ],
+            );
+          },
         ),
       ],
     );
@@ -649,7 +698,7 @@ class _AdminDashboardState extends State<AdminDashboard>
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(12), // Reduced from 20 to 12
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
@@ -663,35 +712,37 @@ class _AdminDashboardState extends State<AdminDashboard>
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min, // Added to prevent overflow
+            mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                padding: const EdgeInsets.all(8), // Reduced from 12 to 8
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: color, size: 20), // Reduced from 24 to 20
+                child: Icon(icon, color: color, size: 24),
               ),
-              const SizedBox(height: 8), // Reduced from 16 to 8
-              Flexible( // Added Flexible to prevent overflow
+              const SizedBox(height: 12),
+              Flexible(
                 child: Text(
                   title,
                   style: AppTheme.headingStyle.copyWith(
-                    fontSize: 14, // Reduced from 16 to 14
+                    fontSize: 16,
                     color: AppTheme.primaryColor,
+                    fontWeight: FontWeight.w600,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const SizedBox(height: 2), // Reduced from 4 to 2
-              Flexible( // Added Flexible to prevent overflow
+              const SizedBox(height: 4),
+              Flexible(
                 child: Text(
                   subtitle,
                   style: AppTheme.bodyStyle.copyWith(
                     color: Colors.grey[600],
-                    fontSize: 10, // Reduced from 12 to 10
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -775,5 +826,56 @@ class _AdminDashboardState extends State<AdminDashboard>
         builder: (context) => const AppSettingsScreen(),
       ),
     );
+  }
+
+  Future<void> _forceCleanupProfileImages() async {
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) =>
+      const AlertDialog(
+        content: Row(
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(width: 16),
+            Text('Cleaning up profile images...'),
+          ],
+        ),
+      ),
+    );
+
+    try {
+      final success = await AdminService.forceCleanupProfileImages();
+
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
+
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Profile images cleaned up successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('❌ Error during cleanup. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('❌ Cleanup failed: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }

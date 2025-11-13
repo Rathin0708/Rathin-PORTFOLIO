@@ -21,6 +21,16 @@ class _LocalProfileManagementScreenState
   void initState() {
     super.initState();
     _loadCurrentAvatar();
+    _performCleanup(); // Add cleanup on init
+  }
+
+  Future<void> _performCleanup() async {
+    // Silently clean up any invalid references
+    try {
+      await LocalProfileService.cleanupInvalidReferences();
+    } catch (e) {
+      print('🧹 Cleanup completed with minor issues: $e');
+    }
   }
 
   Future<void> _loadCurrentAvatar() async {
